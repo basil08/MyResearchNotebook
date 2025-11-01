@@ -1,98 +1,280 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+import { DebugInfo } from '@/components/debug-info';
+import { MultiStepForm } from '@/components/multi-step-form';
+import { ResearchLogFilter } from '@/components/research-log-filter';
+import { ResearchLogList } from '@/components/research-log-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { researchLogService } from '@/services/research-log-service';
+import type { CreateResearchLogInput, FilterOptions, ResearchLog } from '@/types/research-log';
+import { isWithinInterval, parseISO } from 'date-fns';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native';
+
+type ViewMode = 'list' | 'create' | 'edit';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+  const [logs, setLogs] = useState<ResearchLog[]>([]);
+  const [filteredLogs, setFilteredLogs] = useState<ResearchLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [selectedLog, setSelectedLog] = useState<ResearchLog | undefined>();
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState<FilterOptions>({});
+
+  useEffect(() => {
+    loadLogs();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [logs, filters]);
+
+  const loadLogs = async () => {
+    try {
+      setLoading(true);
+      const data = await researchLogService.getAll();
+      // Sort by date field in reverse chronological order (newest first)
+      const sortedData = data.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA; // Reverse chronological order
+      });
+      setLogs(sortedData);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load research logs. Please check your internet connection.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadLogs();
+    setRefreshing(false);
+  }, []);
+
+  const applyFilters = () => {
+    let filtered = [...logs];
+
+    if (filters.dateFrom || filters.dateTo) {
+      filtered = filtered.filter(log => {
+        const logDate = parseISO(log.date);
+        
+        if (filters.dateFrom && filters.dateTo) {
+          return isWithinInterval(logDate, {
+            start: parseISO(filters.dateFrom),
+            end: parseISO(filters.dateTo),
+          });
+        } else if (filters.dateFrom) {
+          return logDate >= parseISO(filters.dateFrom);
+        } else if (filters.dateTo) {
+          return logDate <= parseISO(filters.dateTo);
+        }
+        
+        return true;
+      });
+    }
+
+    setFilteredLogs(filtered);
+  };
+
+  const handleCreate = async (data: CreateResearchLogInput) => {
+    try {
+      setLoading(true);
+      await researchLogService.create(data);
+      await loadLogs();
+      setViewMode('list');
+      Alert.alert('Success', 'Research log created successfully!');
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to create research log. Please try again.';
+      Alert.alert('Error', errorMessage);
+      console.error('Create error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async (data: CreateResearchLogInput) => {
+    if (!selectedLog) return;
+
+    try {
+      setLoading(true);
+      await researchLogService.update({
+        id: selectedLog.id,
+        ...data,
+      });
+      await loadLogs();
+      setViewMode('list');
+      setSelectedLog(undefined);
+      Alert.alert('Success', 'Research log updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update research log. Please try again.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true);
+      await researchLogService.delete(id);
+      await loadLogs();
+      Alert.alert('Success', 'Research log deleted successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to delete research log. Please try again.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (log: ResearchLog) => {
+    setSelectedLog(log);
+    setViewMode('edit');
+  };
+
+  const handleCancel = () => {
+    setViewMode('list');
+    setSelectedLog(undefined);
+  };
+
+  const handleFilterApply = (newFilters: FilterOptions) => {
+    setFilters(newFilters);
+  };
+
+  const renderHeader = () => (
+    <View style={[styles.header, { backgroundColor: isDark ? '#000' : '#fff' }]}>
+      <ThemedText style={styles.headerTitle}>Research Notebook</ThemedText>
+      <View style={styles.headerButtons}>
+        <TouchableOpacity
+          style={[styles.headerButton, styles.filterButton]}
+          onPress={() => setShowFilter(true)}
+        >
+          <ThemedText style={styles.headerButtonText}>
+            {filters.dateFrom || filters.dateTo ? '🔍 *' : '🔍'}
+          </ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.headerButton, styles.addButton]}
+          onPress={() => setViewMode('create')}
+        >
+          <ThemedText style={styles.headerButtonText}>+ New Log</ThemedText>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  if (viewMode === 'create') {
+    return (
+      <ThemedView style={styles.container}>
+        <MultiStepForm
+          onSubmit={handleCreate}
+          onCancel={handleCancel}
+        />
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+    );
+  }
+
+  if (viewMode === 'edit' && selectedLog) {
+    return (
+      <ThemedView style={styles.container}>
+        <MultiStepForm
+          initialData={selectedLog}
+          onSubmit={handleUpdate}
+          onCancel={handleCancel}
+        />
       </ThemedView>
-    </ParallaxScrollView>
+    );
+  }
+
+  return (
+    <ThemedView style={styles.container}>
+      {renderHeader()}
+      
+      {__DEV__ && <DebugInfo />}
+      
+      {loading && !refreshing ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <ThemedText style={styles.loadingText}>Loading logs...</ThemedText>
+        </View>
+      ) : (
+        <ResearchLogList
+          logs={filteredLogs}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+        />
+      )}
+
+      <ResearchLogFilter
+        visible={showFilter}
+        onClose={() => setShowFilter(false)}
+        onApply={handleFilterApply}
+        currentFilters={filters}
+      />
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  header: {
+    padding: 16,
+    paddingTop: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  headerButtons: {
     flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
     alignItems: 'center',
-    gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  filterButton: {
+    backgroundColor: '#666',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  addButton: {
+    backgroundColor: '#007AFF',
+    flex: 1,
+  },
+  headerButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
   },
 });

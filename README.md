@@ -1,50 +1,213 @@
-# Welcome to your Expo app 👋
+# My Research Notebook 📚
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A beautiful, intuitive mobile application for tracking your daily research, learning, and personal development. Built with React Native and Expo, this app helps you maintain a structured log of your intellectual journey.
 
-## Get started
+## Features ✨
 
-1. Install dependencies
+### Core Functionality
+- **Daily Research Logs**: Document your daily activities with 8 comprehensive fields
+- **CRUD Operations**: Create, Read, Update, and Delete research logs
+- **Google Sheets Integration**: Your data is stored in Google Sheets for easy access and export
 
-   ```bash
-   npm install
-   ```
+### User Experience (NEW!)
+- **🎯 Multi-Step Full-Screen Form**: Beautiful step-by-step form with progress indicator, full-screen text fields, and loading states
+- **🔗 Smart URL Handling**: Automatically detects and condenses URLs to `[1]`, `[2]` format - clickable and clean
+- **♾️ Lazy Loading**: Infinite scroll that loads 10 items at a time for optimal performance
+- **🎨 Smart Filtering**: Quick filters (Last 7 Days, This Month, Last Month) + custom date ranges
+- **🌙 Dark Mode**: Automatically adapts to your device's theme
+- **🔄 Pull to Refresh**: Easily sync your data from Google Sheets
+- **📱 Responsive UI**: Beautiful, modern interface optimized for mobile
 
-2. Start the app
+## Research Log Fields 📝
 
-   ```bash
-   npx expo start
-   ```
+Each log entry can contain:
 
-In the output, you'll find options to open the app in a
+1. **What I plan to read today?** - Set your reading intentions
+2. **What did I read today?** - Track your reading progress
+3. **What did I learn today?** - Capture key learnings
+4. **What new things did I think of today?** - Record new ideas and insights
+5. **What did I code/implement today?** - Document your development work
+6. **What did I write today? Or, what did I teach others?** - Track your knowledge sharing
+7. **What are some things I should try tomorrow?** - Plan your next steps
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started 🚀
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
 
-## Get a fresh project
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo CLI
+- A Google Sheet setup with proper API access
 
-When you're ready, run:
+### Installation
 
+1. Clone the repository:
 ```bash
-npm run reset-project
+git clone <your-repo-url>
+cd MyResearchNotebook
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn more
+3. Create a `.env` file in the root directory:
+```
+GOOGLE_SHEET_DB_URL=your_google_sheet_api_url_here
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+4. Start the development server:
+```bash
+npm start
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+5. Run on your device:
+   - For Android: `npm run android`
+   - For iOS: `npm run ios`
+   - Or scan the QR code with Expo Go app
 
-## Join the community
+## Google Sheets Setup 📊
 
-Join our community of developers creating universal apps.
+Your Google Sheet should have the following columns (headers in the first row):
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `id` - Unique identifier (UUID)
+- `created_by` - Author name (hardcoded to "basil")
+- `date` - Date of the log (YYYY-MM-DD format)
+- `plan_to_read` - Reading plans
+- `did_read` - What was read
+- `learned_today` - Learning notes
+- `new_thoughts` - New ideas
+- `coded_today` - Coding/implementation notes
+- `wrote_or_taught` - Writing or teaching notes
+- `try_tomorrow` - Tomorrow's plans
+- `created_at` - Timestamp of creation
+- `updated_at` - Timestamp of last update
+
+### Setting Up Google Sheets API
+
+You'll need to create a Google Apps Script or use Google Sheets API to handle CRUD operations. The expected endpoints are:
+
+- **GET** `GOOGLE_SHEET_DB_URL` - Fetch all logs
+- **POST** `GOOGLE_SHEET_DB_URL` - Create a new log
+- **PUT** `GOOGLE_SHEET_DB_URL?id={id}` - Update a log
+- **DELETE** `GOOGLE_SHEET_DB_URL?id={id}` - Delete a log
+
+Example Google Apps Script can be deployed as a web app to provide these endpoints.
+
+## Project Structure 📁
+
+```
+MyResearchNotebook/
+├── app/                      # Expo Router pages
+│   ├── (tabs)/
+│   │   ├── index.tsx        # Main screen with log list
+│   │   └── explore.tsx      # About/Help screen
+│   └── _layout.tsx
+├── components/              # React components
+│   ├── research-log-form.tsx      # Form for creating/editing logs
+│   ├── research-log-list.tsx      # List view with scroll and delete
+│   └── research-log-filter.tsx    # Filter modal
+├── services/               # API services
+│   └── research-log-service.ts    # Google Sheets integration
+├── types/                  # TypeScript type definitions
+│   └── research-log.ts
+├── assets/                 # Images and static files
+└── constants/              # App constants and themes
+```
+
+## Technologies Used 🛠️
+
+- **React Native** - Mobile framework
+- **Expo** - Development platform
+- **TypeScript** - Type safety
+- **Axios** - HTTP client
+- **date-fns** - Date manipulation
+- **uuid** - Unique ID generation
+- **expo-constants** - Environment variables
+
+## Usage Guide 📱
+
+### Creating a Log
+
+1. Tap the **"+ New Log"** button on the home screen
+2. Fill in any fields you want (all fields are optional)
+3. Tap **"Create"** to save your log
+
+### Editing a Log
+
+1. Find the log you want to edit in the list
+2. Tap the **"Edit"** button on the log card
+3. Make your changes
+4. Tap **"Update"** to save
+
+### Deleting a Log
+
+1. Find the log you want to delete
+2. Tap the **"Delete"** button
+3. Confirm the deletion in the popup
+
+### Filtering Logs
+
+1. Tap the **🔍** filter icon in the header
+2. Choose a quick filter or enter custom dates
+3. Tap **"Apply"** to filter the list
+4. Tap **"Clear"** to remove filters
+
+### Refreshing Data
+
+Pull down on the log list to refresh and sync with your Google Sheet database.
+
+## Development 💻
+
+### Running in Development Mode
+
+```bash
+npm start
+```
+
+### Building for Production
+
+```bash
+# For Android
+npm run android
+
+# For iOS
+npm run ios
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+## Environment Variables 🔐
+
+Create a `.env` file in the root directory:
+
+```
+GOOGLE_SHEET_DB_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+```
+
+## Contributing 🤝
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License 📄
+
+This project is open source and available under the MIT License.
+
+## Support 💬
+
+If you encounter any issues or have questions, please open an issue on the GitHub repository.
+
+## Acknowledgments 🙏
+
+- Built with [Expo](https://expo.dev/)
+- Icons from [SF Symbols](https://developer.apple.com/sf-symbols/)
+- Inspired by the need for better research tracking and personal development tools
+
+---
+
+Made with ❤️ for researchers, learners, and knowledge enthusiasts.

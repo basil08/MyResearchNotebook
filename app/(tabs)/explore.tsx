@@ -1,11 +1,9 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Collapsible } from '@/components/ui/collapsible';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 
@@ -17,7 +15,7 @@ export default function TabTwoScreen() {
         <IconSymbol
           size={310}
           color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
+          name="book.fill"
           style={styles.headerImage}
         />
       }>
@@ -27,72 +25,86 @@ export default function TabTwoScreen() {
           style={{
             fontFamily: Fonts.rounded,
           }}>
-          Explore
+          About Research Notebook
         </ThemedText>
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
+      <ThemedText>
+        Your daily companion for tracking research, learning, and personal development.
+      </ThemedText>
+
+      <Collapsible title="Features">
         <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+          • <ThemedText type="defaultSemiBold">Daily Logs:</ThemedText> Track your daily research activities, learnings, and accomplishments.
         </ThemedText>
         <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
+          • <ThemedText type="defaultSemiBold">Comprehensive Fields:</ThemedText> Document what you plan to read, what you've read, learned, thought about, coded, wrote, and what to try tomorrow.
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
         <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
+          • <ThemedText type="defaultSemiBold">Filtering:</ThemedText> Filter logs by date ranges including quick filters for last 7 days, this month, and last month.
+        </ThemedText>
+        <ThemedText>
+          • <ThemedText type="defaultSemiBold">Full CRUD:</ThemedText> Create, read, update, and delete your research logs.
         </ThemedText>
       </Collapsible>
-      <Collapsible title="Images">
+
+      <Collapsible title="How to Use">
         <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
+          1. Tap <ThemedText type="defaultSemiBold">"+ New Log"</ThemedText> on the home screen to create a new research log entry.
         </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
+        <ThemedText>
+          2. Fill in the fields that are relevant to your day - all fields are optional.
+        </ThemedText>
+        <ThemedText>
+          3. Tap <ThemedText type="defaultSemiBold">"Edit"</ThemedText> on any log to update it.
+        </ThemedText>
+        <ThemedText>
+          4. Tap <ThemedText type="defaultSemiBold">"Delete"</ThemedText> to remove a log (with confirmation).
+        </ThemedText>
+        <ThemedText>
+          5. Use the <ThemedText type="defaultSemiBold">🔍 filter icon</ThemedText> to filter logs by date range.
+        </ThemedText>
+        <ThemedText>
+          6. Pull down on the list to refresh and sync with your Google Sheet database.
+        </ThemedText>
       </Collapsible>
-      <Collapsible title="Light and dark mode components">
+
+      <Collapsible title="Data Storage">
         <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
+          Your research logs are stored in a Google Sheet, making them accessible from anywhere and easy to export or analyze using spreadsheet tools.
         </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
+        <ThemedText style={{ marginTop: 8 }}>
+          The Google Sheet URL is configured in your environment variables. Make sure your sheet has the proper permissions and API setup.
+        </ThemedText>
       </Collapsible>
-      <Collapsible title="Animations">
+
+      <Collapsible title="Tips for Maximum Productivity">
         <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
+          • Make it a daily habit to fill out your research log at the end of each day.
         </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
+        <ThemedText>
+          • Use the "Try Tomorrow" field to set intentions for the next day.
+        </ThemedText>
+        <ThemedText>
+          • Review past logs regularly to track your progress and identify patterns.
+        </ThemedText>
+        <ThemedText>
+          • Be honest and detailed - your future self will thank you!
+        </ThemedText>
+      </Collapsible>
+
+      <Collapsible title="Technical Stack">
+        <ThemedText>
+          • <ThemedText type="defaultSemiBold">Framework:</ThemedText> React Native with Expo
+        </ThemedText>
+        <ThemedText>
+          • <ThemedText type="defaultSemiBold">Language:</ThemedText> TypeScript
+        </ThemedText>
+        <ThemedText>
+          • <ThemedText type="defaultSemiBold">Backend:</ThemedText> Google Sheets API
+        </ThemedText>
+        <ThemedText>
+          • <ThemedText type="defaultSemiBold">Features:</ThemedText> Dark mode support, pull-to-refresh, date filtering
+        </ThemedText>
       </Collapsible>
     </ParallaxScrollView>
   );
