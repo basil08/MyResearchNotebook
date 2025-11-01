@@ -6,7 +6,7 @@ module.exports = ({ config }) => {
       ...config,
       expo: {
         ...expoConfig,
-        name: "MyResearchNotebook",
+        name: "Research Notebook",
         slug: "MyResearchNotebook",
         version: "1.0.0",
         orientation: "portrait",
@@ -16,8 +16,11 @@ module.exports = ({ config }) => {
         newArchEnabled: true,
         ios: {
           supportsTablet: true,
+          bundleIdentifier: "com.basil.myresearchnotebook",
         },
         android: {
+          package: "com.basil.myresearchnotebook",
+          versionCode: 1,
           adaptiveIcon: {
             backgroundColor: "#E6F4FE",
             foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -26,6 +29,7 @@ module.exports = ({ config }) => {
           },
           edgeToEdgeEnabled: true,
           predictiveBackGestureEnabled: false,
+          permissions: ["INTERNET"],
         },
         web: {
           output: "static",
