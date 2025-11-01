@@ -2,6 +2,14 @@
 
 A beautiful, intuitive mobile application for tracking your daily research, learning, and personal development. Built with React Native and Expo, this app helps you maintain a structured log of your intellectual journey.
 
+# TODO for version 2
+
+1. Markdown preview is broken in Research Log card
+2. Remove unnecessary emojis from UI
+3. "What do I plan to do?" is missing
+4. Make research card appear as full screens when clicked on
+5. Ensure lazy loading is working
+
 ## Features ✨
 
 ### Core Functionality
@@ -29,6 +37,31 @@ Each log entry can contain:
 5. **What did I code/implement today?** - Document your development work
 6. **What did I write today? Or, what did I teach others?** - Track your knowledge sharing
 7. **What are some things I should try tomorrow?** - Plan your next steps
+
+## Platform Support 📱💻
+
+This app works on:
+- **iOS** - Native mobile app
+- **Android** - Native mobile app  
+- **Web** - Progressive Web App (PWA)
+
+### Web Deployment 🌐
+Your Research Notebook can be deployed as a static website! 
+
+**Quick Start:**
+```bash
+npm run web           # Development
+npm run build:web     # Build for production
+npm run serve:web     # Test production build
+```
+
+**Deploy to popular platforms:**
+- 🔷 **Vercel** (recommended) - [Quick Start Guide](./WEB_QUICKSTART.md)
+- 🔶 **Netlify** - [Quick Start Guide](./WEB_QUICKSTART.md)
+- 🔸 **GitHub Pages** - [Full Guide](./WEB_DEPLOYMENT.md)
+- 🔹 **AWS S3 + CloudFront** - [Full Guide](./WEB_DEPLOYMENT.md)
+
+See [WEB_QUICKSTART.md](./WEB_QUICKSTART.md) for 5-minute deployment or [WEB_DEPLOYMENT.md](./WEB_DEPLOYMENT.md) for comprehensive instructions.
 
 ## Getting Started 🚀
 
@@ -63,9 +96,10 @@ npm start
 ```
 
 5. Run on your device:
-   - For Android: `npm run android`
-   - For iOS: `npm run ios`
-   - Or scan the QR code with Expo Go app
+   - **iOS:** `npm run ios`
+   - **Android:** `npm run android`
+   - **Web:** `npm run web`
+   - **Mobile (Expo Go):** Scan the QR code with Expo Go app
 
 ## Google Sheets Setup 📊
 
@@ -170,11 +204,16 @@ npm start
 
 ```bash
 # For Android
-npm run android
+eas build --platform android --profile production
 
 # For iOS
-npm run ios
+eas build --platform ios --profile production
+
+# For Web
+npm run build:web
 ```
+
+See [BUILD_GUIDE.md](./BUILD_GUIDE.md) for mobile builds and [WEB_DEPLOYMENT.md](./WEB_DEPLOYMENT.md) for web deployment.
 
 ### Linting
 

@@ -11,7 +11,9 @@
     "lint": "expo lint",
     "clear-cache": "expo start -c",
     "build:android:preview": "eas build --platform android --profile preview",
-    "build:android:production": "eas build --platform android --profile production"
+    "build:android:production": "eas build --platform android --profile production",
+    "build:web": "expo export -p web",
+    "serve:web": "npx serve dist"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
