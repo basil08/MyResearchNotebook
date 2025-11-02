@@ -1,6 +1,7 @@
 import type { CreateResearchLogInput, ResearchLog, UpdateResearchLogInput } from '@/types/research-log';
 import axios from 'axios';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,11 +13,32 @@ const GOOGLE_SHEET_URL = Constants.expoConfig?.extra?.GOOGLE_SHEET_DB_URL ||
 // Expected columns: id, created_by, date, plan_to_read, did_read, learned_today, 
 //                   new_thoughts, coded_today, wrote_or_taught, try_tomorrow, created_at, updated_at
 
+/**
+ * Get the API URL based on platform
+ * - Web: Use CORS proxy at /api/proxy
+ * - Mobile (iOS/Android): Use Google Sheets directly (no CORS issues)
+ */
+function getApiUrl(): string {
+  if (Platform.OS === 'web') {
+    // For web, use the proxy to avoid CORS issues
+    // In development: http://localhost:3000/api/proxy
+    // In production: https://yourdomain.com/api/proxy
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : 'http://localhost:3000';
+    return `${baseUrl}/api/proxy`;
+  }
+  
+  // For mobile, use Google Sheets directly
+  return GOOGLE_SHEET_URL;
+}
+
 class ResearchLogService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = GOOGLE_SHEET_URL;
+    this.baseUrl = getApiUrl();
+    console.log(`[ResearchLogService] Platform: ${Platform.OS}, API URL: ${this.baseUrl}`);
   }
 
   /**

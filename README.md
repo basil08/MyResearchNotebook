@@ -46,22 +46,27 @@ This app works on:
 - **Web** - Progressive Web App (PWA)
 
 ### Web Deployment 🌐
-Your Research Notebook can be deployed as a static website! 
+Your Research Notebook can be deployed as a web app with a built-in **CORS proxy**!
 
 **Quick Start:**
 ```bash
-npm run web           # Development
+vercel dev            # Development with proxy
 npm run build:web     # Build for production
-npm run serve:web     # Test production build
+vercel --prod         # Deploy to Vercel
 ```
 
 **Deploy to popular platforms:**
-- 🔷 **Vercel** (recommended) - [Quick Start Guide](./WEB_QUICKSTART.md)
-- 🔶 **Netlify** - [Quick Start Guide](./WEB_QUICKSTART.md)
-- 🔸 **GitHub Pages** - [Full Guide](./WEB_DEPLOYMENT.md)
-- 🔹 **AWS S3 + CloudFront** - [Full Guide](./WEB_DEPLOYMENT.md)
+- 🔷 **Vercel** (recommended) - Includes serverless proxy
+- 🔶 **Netlify** - Includes serverless functions
 
-See [WEB_QUICKSTART.md](./WEB_QUICKSTART.md) for 5-minute deployment or [WEB_DEPLOYMENT.md](./WEB_DEPLOYMENT.md) for comprehensive instructions.
+**About the CORS Proxy:**
+Since Google Apps Script doesn't support CORS headers properly, we've added a serverless proxy that:
+- ✅ Handles CORS for web browsers automatically
+- ✅ Only used by web (mobile apps connect directly to Google Sheets)
+- ✅ Deploys automatically with your app
+- ✅ Zero configuration needed
+
+See [PROXY_QUICK_START.md](./PROXY_QUICK_START.md) for deployment guide.
 
 ## Getting Started 🚀
 
