@@ -26,6 +26,7 @@ export function ResearchLogForm({ initialData, onSubmit, onCancel }: ResearchLog
   const [formData, setFormData] = useState<CreateResearchLogInput>({
     date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
     plan_to_read: initialData?.plan_to_read || '',
+    plan_to_do: initialData?.plan_to_do || '',
     did_read: initialData?.did_read || '',
     learned_today: initialData?.learned_today || '',
     new_thoughts: initialData?.new_thoughts || '',
@@ -86,6 +87,19 @@ export function ResearchLogForm({ initialData, onSubmit, onCancel }: ResearchLog
             value={formData.plan_to_read}
             onChangeText={(value) => handleChange('plan_to_read', value)}
             placeholder="Enter what you plan to read..."
+            placeholderTextColor={isDark ? '#666' : '#999'}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
+
+        <View style={styles.fieldContainer}>
+          <ThemedText style={styles.label}>What do I plan to do?</ThemedText>
+          <TextInput
+            style={multilineInputStyle}
+            value={formData.plan_to_do}
+            onChangeText={(value) => handleChange('plan_to_do', value)}
+            placeholder="Enter what you plan to do..."
             placeholderTextColor={isDark ? '#666' : '#999'}
             multiline
             numberOfLines={3}

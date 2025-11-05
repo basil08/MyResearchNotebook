@@ -43,6 +43,11 @@ const formFields: FormField[] = [
     placeholder: 'Enter what you plan to read...',
   },
   {
+    key: 'plan_to_do',
+    label: 'What do I plan to do?',
+    placeholder: 'Enter what you plan to do...',
+  },
+  {
     key: 'did_read',
     label: 'What did I read today?',
     placeholder: 'Enter what you read...',
@@ -84,6 +89,7 @@ export function MultiStepForm({ initialData, onSubmit, onCancel }: MultiStepForm
   const [formData, setFormData] = useState<CreateResearchLogInput>({
     date: initialData?.date || format(new Date(), 'yyyy-MM-dd'),
     plan_to_read: initialData?.plan_to_read || '',
+    plan_to_do: initialData?.plan_to_do || '',
     did_read: initialData?.did_read || '',
     learned_today: initialData?.learned_today || '',
     new_thoughts: initialData?.new_thoughts || '',
@@ -205,7 +211,7 @@ export function MultiStepForm({ initialData, onSubmit, onCancel }: MultiStepForm
           {/* Markdown hint for non-date fields */}
           {!isDateField && (
             <ThemedText style={styles.hint}>
-              💡 Tip: Paste URLs directly - they'll be automatically formatted as clickable links
+              Tip: Paste URLs directly - they'll be automatically formatted as clickable links
             </ThemedText>
           )}
         </ScrollView>

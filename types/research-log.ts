@@ -3,6 +3,7 @@ export interface ResearchLog {
   created_by: string;
   date: string; // ISO date string
   plan_to_read: string;
+  plan_to_do: string;
   did_read: string;
   learned_today: string;
   new_thoughts: string;
@@ -16,6 +17,7 @@ export interface ResearchLog {
 export interface CreateResearchLogInput {
   date: string;
   plan_to_read: string;
+  plan_to_do: string;
   did_read: string;
   learned_today: string;
   new_thoughts: string;

@@ -10,7 +10,7 @@ const GOOGLE_SHEET_URL = Constants.expoConfig?.extra?.GOOGLE_SHEET_DB_URL ||
                          '';
 
 // Headers should match the Google Sheet column structure
-// Expected columns: id, created_by, date, plan_to_read, did_read, learned_today, 
+// Expected columns: id, created_by, date, plan_to_read, plan_to_do, did_read, learned_today, 
 //                   new_thoughts, coded_today, wrote_or_taught, try_tomorrow, created_at, updated_at
 
 /**
@@ -85,6 +85,7 @@ class ResearchLogService {
         created_by: 'basil',
         date: input.date,
         plan_to_read: input.plan_to_read,
+        plan_to_do: input.plan_to_do,
         did_read: input.did_read,
         learned_today: input.learned_today,
         new_thoughts: input.new_thoughts,

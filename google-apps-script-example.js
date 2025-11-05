@@ -11,7 +11,7 @@
  * 
  * Required Sheet Structure:
  * First row should contain these headers (in any order):
- * id, created_by, date, plan_to_read, did_read, learned_today, 
+ * id, created_by, date, plan_to_read, plan_to_do, did_read, learned_today, 
  * new_thoughts, coded_today, wrote_or_taught, try_tomorrow, created_at, updated_at
  */
 

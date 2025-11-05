@@ -1,5 +1,6 @@
 import { DebugInfo } from '@/components/debug-info';
 import { MultiStepForm } from '@/components/multi-step-form';
+import { ResearchLogDetail } from '@/components/research-log-detail';
 import { ResearchLogFilter } from '@/components/research-log-filter';
 import { ResearchLogList } from '@/components/research-log-list';
 import { ThemedText } from '@/components/themed-text';
@@ -17,7 +18,7 @@ import {
   View
 } from 'react-native';
 
-type ViewMode = 'list' | 'create' | 'edit';
+type ViewMode = 'list' | 'create' | 'edit' | 'detail';
 
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
@@ -141,12 +142,22 @@ export default function HomeScreen() {
     }
   };
 
+  const handleView = (log: ResearchLog) => {
+    setSelectedLog(log);
+    setViewMode('detail');
+  };
+
   const handleEdit = (log: ResearchLog) => {
     setSelectedLog(log);
     setViewMode('edit');
   };
 
   const handleCancel = () => {
+    setViewMode('list');
+    setSelectedLog(undefined);
+  };
+
+  const handleCloseDetail = () => {
     setViewMode('list');
     setSelectedLog(undefined);
   };
@@ -164,7 +175,7 @@ export default function HomeScreen() {
           onPress={() => setShowFilter(true)}
         >
           <ThemedText style={styles.headerButtonText}>
-            {filters.dateFrom || filters.dateTo ? '🔍 *' : '🔍'}
+            {filters.dateFrom || filters.dateTo ? 'Filter *' : 'Filter'}
           </ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
@@ -200,6 +211,19 @@ export default function HomeScreen() {
     );
   }
 
+  if (viewMode === 'detail' && selectedLog) {
+    return (
+      <ThemedView style={styles.container}>
+        <ResearchLogDetail
+          log={selectedLog}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onClose={handleCloseDetail}
+        />
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView style={styles.container}>
       {renderHeader()}
@@ -214,6 +238,7 @@ export default function HomeScreen() {
       ) : (
         <ResearchLogList
           logs={filteredLogs}
+          onView={handleView}
           onEdit={handleEdit}
           onDelete={handleDelete}
           refreshing={refreshing}

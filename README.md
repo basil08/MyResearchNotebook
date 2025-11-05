@@ -4,10 +4,6 @@ A beautiful, intuitive mobile application for tracking your daily research, lear
 
 # TODO for version 2
 
-1. Markdown preview is broken in Research Log card
-2. Remove unnecessary emojis from UI
-3. "What do I plan to do?" is missing
-4. Make research card appear as full screens when clicked on
 5. Ensure lazy loading is working
 
 ## Features ✨

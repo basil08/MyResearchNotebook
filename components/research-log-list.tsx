@@ -1,4 +1,4 @@
-import { ParsedTextView } from '@/components/parsed-text-view';
+import { MarkdownView } from '@/components/markdown-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -19,6 +19,7 @@ const ITEMS_PER_PAGE = 10;
 
 interface ResearchLogListProps {
   logs: ResearchLog[];
+  onView: (log: ResearchLog) => void;
   onEdit: (log: ResearchLog) => void;
   onDelete: (id: string) => void;
   refreshing?: boolean;
@@ -27,6 +28,7 @@ interface ResearchLogListProps {
 
 export function ResearchLogList({ 
   logs, 
+  onView,
   onEdit, 
   onDelete,
   refreshing = false,
@@ -66,77 +68,58 @@ export function ResearchLogList({
       }
     ];
 
+    // Combine all fields to show preview
+    const contentFields = [
+      item.plan_to_read,
+      item.plan_to_do,
+      item.did_read,
+      item.learned_today,
+      item.new_thoughts,
+      item.coded_today,
+      item.wrote_or_taught,
+      item.try_tomorrow,
+    ].filter(Boolean);
+
+    const previewContent = contentFields.join('\n\n').slice(0, 100) + (contentFields.join('\n\n').length > 100 ? '...' : '');
+
     return (
-      <ThemedView style={cardStyle}>
-        <View style={styles.cardHeader}>
-          <ThemedText style={styles.date}>
-            {format(parseISO(item.date), 'EEE, MMM d yyyy')}
-          </ThemedText>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.editButton]}
-              onPress={() => onEdit(item)}
-            >
-              <Text style={styles.actionButtonText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.deleteButton]}
-              onPress={() => handleDelete(item)}
-            >
-              <Text style={styles.actionButtonText}>Delete</Text>
-            </TouchableOpacity>
+      <TouchableOpacity onPress={() => onView(item)} activeOpacity={0.7}>
+        <ThemedView style={cardStyle}>
+          <View style={styles.cardHeader}>
+            <ThemedText style={styles.date}>
+              {format(parseISO(item.date), 'EEE, MMM d yyyy')}
+            </ThemedText>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.editButton]}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  onEdit(item);
+                }}
+              >
+                <Text style={styles.actionButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.deleteButton]}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleDelete(item);
+                }}
+              >
+                <Text style={styles.actionButtonText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {item.plan_to_read && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Plan to Read:</ThemedText>
-            <ParsedTextView text={item.plan_to_read} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.did_read && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Did Read:</ThemedText>
-            <ParsedTextView text={item.did_read} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.learned_today && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Learned:</ThemedText>
-            <ParsedTextView text={item.learned_today} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.new_thoughts && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>New Thoughts:</ThemedText>
-            <ParsedTextView text={item.new_thoughts} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.coded_today && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Coded/Implemented:</ThemedText>
-            <ParsedTextView text={item.coded_today} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.wrote_or_taught && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Wrote/Taught:</ThemedText>
-            <ParsedTextView text={item.wrote_or_taught} style={styles.fieldValue} />
-          </View>
-        )}
-
-        {item.try_tomorrow && (
-          <View style={styles.fieldSection}>
-            <ThemedText style={styles.fieldLabel}>Try Tomorrow:</ThemedText>
-            <ParsedTextView text={item.try_tomorrow} style={styles.fieldValue} />
-          </View>
-        )}
-      </ThemedView>
+          {previewContent && (
+            <View style={styles.previewSection}>
+              <View style={styles.previewContent}>
+                <MarkdownView text={previewContent} style={styles.previewText} />
+              </View>
+            </View>
+          )}
+        </ThemedView>
+      </TouchableOpacity>
     );
   };
 
@@ -250,18 +233,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  fieldSection: {
-    marginTop: 8,
+  previewSection: {
+    marginTop: 12,
   },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 4,
-    opacity: 0.7,
+  previewContent: {
+    maxHeight: 200,
+    overflow: 'hidden',
   },
-  fieldValue: {
+  previewText: {
     fontSize: 14,
     lineHeight: 20,
+    opacity: 0.85,
+  },
+  tapToViewMore: {
+    marginTop: 8,
+    fontSize: 13,
+    opacity: 0.6,
+    fontStyle: 'italic',
   },
   emptyState: {
     flex: 1,

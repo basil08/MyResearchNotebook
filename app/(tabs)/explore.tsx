@@ -61,7 +61,7 @@ export default function TabTwoScreen() {
           4. Tap <ThemedText type="defaultSemiBold">"Delete"</ThemedText> to remove a log (with confirmation).
         </ThemedText>
         <ThemedText>
-          5. Use the <ThemedText type="defaultSemiBold">🔍 filter icon</ThemedText> to filter logs by date range.
+          5. Use the <ThemedText type="defaultSemiBold">filter button</ThemedText> to filter logs by date range.
         </ThemedText>
         <ThemedText>
           6. Pull down on the list to refresh and sync with your Google Sheet database.
