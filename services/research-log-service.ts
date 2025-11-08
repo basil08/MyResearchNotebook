@@ -21,12 +21,21 @@ const GOOGLE_SHEET_URL = Constants.expoConfig?.extra?.GOOGLE_SHEET_DB_URL ||
 function getApiUrl(): string {
   if (Platform.OS === 'web') {
     // For web, use the proxy to avoid CORS issues
-    // In development: http://localhost:3000/api/proxy
-    // In production: https://yourdomain.com/api/proxy
-    const baseUrl = typeof window !== 'undefined' 
-      ? window.location.origin 
-      : 'http://localhost:3000';
-    return `${baseUrl}/api/proxy`;
+    if (typeof window !== 'undefined') {
+      const { hostname, protocol } = window.location;
+      
+      // Local development: Expo runs on different port than Express server
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // Proxy server runs on port 3000 in development
+        return 'http://localhost:3000/api/proxy';
+      }
+      
+      // Production: Use same origin (Vercel serves both)
+      return `${protocol}//${hostname}/api/proxy`;
+    }
+    
+    // Fallback (SSR or edge case)
+    return 'http://localhost:3000/api/proxy';
   }
   
   // For mobile, use Google Sheets directly

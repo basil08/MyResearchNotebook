@@ -3,10 +3,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { ResearchLog } from '@/types/research-log';
+import { showAlert } from '@/utils/alert';
 import { format, parseISO } from 'date-fns';
 import React from 'react';
 import {
-    Alert,
     ScrollView,
     StyleSheet,
     Text,
@@ -26,7 +26,7 @@ export function ResearchLogDetail({ log, onEdit, onDelete, onClose }: ResearchLo
   const isDark = colorScheme === 'dark';
 
   const handleDelete = () => {
-    Alert.alert(
+    showAlert(
       'Delete Log',
       `Are you sure you want to delete the log from ${format(parseISO(log.date), 'MMM dd, yyyy')}?`,
       [

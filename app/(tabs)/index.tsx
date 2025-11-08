@@ -8,11 +8,11 @@ import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { researchLogService } from '@/services/research-log-service';
 import type { CreateResearchLogInput, FilterOptions, ResearchLog } from '@/types/research-log';
+import { showSimpleAlert } from '@/utils/alert';
 import { isWithinInterval, parseISO } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   TouchableOpacity,
   View
@@ -53,7 +53,7 @@ export default function HomeScreen() {
       });
       setLogs(sortedData);
     } catch (error) {
-      Alert.alert('Error', 'Failed to load research logs. Please check your internet connection.');
+      showSimpleAlert('Error', 'Failed to load research logs. Please check your internet connection.');
       console.error(error);
     } finally {
       setLoading(false);
@@ -97,10 +97,10 @@ export default function HomeScreen() {
       await researchLogService.create(data);
       await loadLogs();
       setViewMode('list');
-      Alert.alert('Success', 'Research log created successfully!');
+      showSimpleAlert('Success', 'Research log created successfully!');
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to create research log. Please try again.';
-      Alert.alert('Error', errorMessage);
+      showSimpleAlert('Error', errorMessage);
       console.error('Create error:', error);
     } finally {
       setLoading(false);
@@ -119,9 +119,9 @@ export default function HomeScreen() {
       await loadLogs();
       setViewMode('list');
       setSelectedLog(undefined);
-      Alert.alert('Success', 'Research log updated successfully!');
+      showSimpleAlert('Success', 'Research log updated successfully!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to update research log. Please try again.');
+      showSimpleAlert('Error', 'Failed to update research log. Please try again.');
       console.error(error);
     } finally {
       setLoading(false);
@@ -133,9 +133,9 @@ export default function HomeScreen() {
       setLoading(true);
       await researchLogService.delete(id);
       await loadLogs();
-      Alert.alert('Success', 'Research log deleted successfully!');
+      showSimpleAlert('Success', 'Research log deleted successfully!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete research log. Please try again.');
+      showSimpleAlert('Error', 'Failed to delete research log. Please try again.');
       console.error(error);
     } finally {
       setLoading(false);

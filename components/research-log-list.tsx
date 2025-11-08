@@ -3,11 +3,11 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import type { ResearchLog } from '@/types/research-log';
+import { showAlert } from '@/utils/alert';
 import { format, parseISO } from 'date-fns';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert,
     FlatList,
     StyleSheet,
     Text,
@@ -45,7 +45,7 @@ export function ResearchLogList({
   const hasMore = displayedCount < logs.length;
 
   const handleDelete = (log: ResearchLog) => {
-    Alert.alert(
+    showAlert(
       'Delete Log',
       `Are you sure you want to delete the log from ${format(parseISO(log.date), 'MMM dd, yyyy')}?`,
       [

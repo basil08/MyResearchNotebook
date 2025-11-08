@@ -1,10 +1,7 @@
 # My Research Notebook 📚
 
 A beautiful, intuitive mobile application for tracking your daily research, learning, and personal development. Built with React Native and Expo, this app helps you maintain a structured log of your intellectual journey.
-
-# TODO for version 2
-
-5. Ensure lazy loading is working
+]
 
 ## Features ✨
 
@@ -21,6 +18,7 @@ A beautiful, intuitive mobile application for tracking your daily research, lear
 - **🌙 Dark Mode**: Automatically adapts to your device's theme
 - **🔄 Pull to Refresh**: Easily sync your data from Google Sheets
 - **📱 Responsive UI**: Beautiful, modern interface optimized for mobile
+- **💻 Web Layout**: Centered 800px max-width design for optimal viewing on wide screens (web only)
 
 ## Research Log Fields 📝
 
@@ -42,27 +40,33 @@ This app works on:
 - **Web** - Progressive Web App (PWA)
 
 ### Web Deployment 🌐
-Your Research Notebook can be deployed as a web app with a built-in **CORS proxy**!
+Your Research Notebook can be deployed as a web app with a built-in **Express proxy server** to avoid CORS issues!
 
 **Quick Start:**
 ```bash
-vercel dev            # Development with proxy
-npm run build:web     # Build for production
+npm install           # Install dependencies (including Express)
+npm run server        # Run proxy server locally (port 3000)
+npm run build:web     # Build web app for production
 vercel --prod         # Deploy to Vercel
 ```
 
-**Deploy to popular platforms:**
-- 🔷 **Vercel** (recommended) - Includes serverless proxy
-- 🔶 **Netlify** - Includes serverless functions
+**Deploy to Vercel:**
+- 🔷 **Vercel** (recommended) - Full Express server deployment
 
 **About the CORS Proxy:**
-Since Google Apps Script doesn't support CORS headers properly, we've added a serverless proxy that:
+Since browsers block direct requests to Google Sheets, we've added an Express proxy server that:
 - ✅ Handles CORS for web browsers automatically
 - ✅ Only used by web (mobile apps connect directly to Google Sheets)
-- ✅ Deploys automatically with your app
-- ✅ Zero configuration needed
+- ✅ Runs as a proper Node.js server on Vercel
+- ✅ Includes health check and debugging endpoints
 
-See [PROXY_QUICK_START.md](./PROXY_QUICK_START.md) for deployment guide.
+**Documentation:**
+- 📘 **[PROXY_README.md](./PROXY_README.md)** - Start here! Index of all proxy documentation
+- 🚀 **[QUICK_START.md](./QUICK_START.md)** - 5-minute setup guide
+- 📖 **[PROXY_DEPLOYMENT.md](./PROXY_DEPLOYMENT.md)** - Complete deployment guide
+- 🔧 **[ENV_SETUP.md](./ENV_SETUP.md)** - Environment variables guide
+- 🏗️ **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical architecture
+- 🎨 **[WEB_LAYOUT_GUIDE.md](./WEB_LAYOUT_GUIDE.md)** - Responsive web layout customization
 
 ## Getting Started 🚀
 
@@ -153,6 +157,7 @@ MyResearchNotebook/
 
 ## Technologies Used 🛠️
 
+### Frontend
 - **React Native** - Mobile framework
 - **Expo** - Development platform
 - **TypeScript** - Type safety
@@ -160,6 +165,12 @@ MyResearchNotebook/
 - **date-fns** - Date manipulation
 - **uuid** - Unique ID generation
 - **expo-constants** - Environment variables
+
+### Backend (Proxy Server)
+- **Express** - Web server framework
+- **CORS** - Cross-origin resource sharing middleware
+- **Node.js** - JavaScript runtime
+- **Vercel** - Deployment platform
 
 ## Usage Guide 📱
 
@@ -197,8 +208,21 @@ Pull down on the log list to refresh and sync with your Google Sheet database.
 
 ### Running in Development Mode
 
+**Mobile/Web App:**
 ```bash
-npm start
+npm start       # Start Expo dev server
+npm run web     # Start web version
+```
+
+**Proxy Server (for web):**
+```bash
+npm run server      # Run proxy server
+npm run server:dev  # Run with auto-reload
+```
+
+**Test Proxy:**
+```bash
+./test-proxy.sh http://localhost:3000
 ```
 
 ### Building for Production
@@ -214,7 +238,264 @@ eas build --platform ios --profile production
 npm run build:web
 ```
 
-See [BUILD_GUIDE.md](./BUILD_GUIDE.md) for mobile builds and [WEB_DEPLOYMENT.md](./WEB_DEPLOYMENT.md) for web deployment.
+## 🚀 Deploying to Vercel
+
+Deploy both the **Expo web app** and **Express proxy server** to Vercel in a single project:
+
+### Prerequisites
+
+1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
+2. **Google Sheets Setup**: Complete [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md) first
+3. **Git Repository**: Push your code to GitHub/GitLab/Bitbucket
+
+### Quick Deployment
+
+#### Option A: Deploy via Vercel CLI (Recommended)
+
+```bash
+# 1. Install Vercel CLI
+npm install -g vercel
+
+# 2. Login to Vercel
+vercel login
+
+# 3. Deploy to preview
+vercel
+
+# 4. Add environment variable
+vercel env add GOOGLE_SHEET_DB_URL
+# Paste your Google Sheets Web App URL when prompted
+# Select: Production, Preview, and Development
+
+# 5. Deploy to production
+vercel --prod
+```
+
+Your app will be live at: `https://your-project.vercel.app`
+
+#### Option B: Deploy via Vercel Dashboard
+
+1. **Import Your Repository**
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Click **"Import Git Repository"**
+   - Select your repository and click **Import**
+
+2. **Configure Build Settings**
+   
+   Vercel auto-detects the configuration from `vercel.json`, but verify:
+   - **Framework Preset:** Other
+   - **Build Command:** `npm run build:web`
+   - **Output Directory:** `dist`
+   - **Install Command:** `npm install`
+
+3. **Add Environment Variables**
+   - Click **"Environment Variables"**
+   - Add variable:
+     - **Name:** `GOOGLE_SHEET_DB_URL`
+     - **Value:** Your Google Sheets Web App URL (from Apps Script)
+   - Select **all environments** (Production, Preview, Development)
+
+4. **Deploy**
+   - Click **"Deploy"**
+   - Wait 2-3 minutes for the build to complete
+   - Your app will be live!
+
+### What Gets Deployed
+
+Your Vercel deployment includes:
+
+```
+your-app.vercel.app/
+├── /                    → Expo Web App (React)
+├── /health             → Express Health Check
+└── /api/proxy          → Express Proxy (handles Google Sheets)
+```
+
+**Architecture:**
+- **Frontend:** Static Expo web build served from `dist/`
+- **Backend:** Express server running as serverless function
+- **Routing:** Configured in `vercel.json`
+- **CORS:** Handled by Express middleware
+
+### Verify Deployment
+
+1. **Check Health Endpoint:**
+   ```bash
+   curl https://your-app.vercel.app/health
+   ```
+   
+   Should return:
+   ```json
+   {
+     "status": "ok",
+     "timestamp": "...",
+     "environment": "production"
+   }
+   ```
+
+2. **Test the Web App:**
+   - Visit `https://your-app.vercel.app`
+   - Try creating a research log
+   - Verify data appears in your Google Sheet
+
+### Updating Your Deployment
+
+**Automatic Deployment:**
+```bash
+git add .
+git commit -m "Update app"
+git push
+```
+Vercel automatically redeploys on push!
+
+**Manual Deployment:**
+```bash
+vercel --prod
+```
+
+### Environment Variables Management
+
+**Add a variable:**
+```bash
+vercel env add VARIABLE_NAME
+```
+
+**List variables:**
+```bash
+vercel env ls
+```
+
+**Remove a variable:**
+```bash
+vercel env rm VARIABLE_NAME
+```
+
+### Custom Domain (Optional)
+
+1. Go to your project in Vercel Dashboard
+2. Click **Settings** → **Domains**
+3. Add your custom domain
+4. Update DNS records as instructed
+5. SSL certificate is automatically provisioned
+
+### Troubleshooting Deployment
+
+#### Build Fails
+
+**Check logs:**
+```bash
+vercel logs <deployment-url>
+```
+
+**Common issues:**
+- Missing dependencies: Run `npm install` locally first
+- TypeScript errors: Fix with `npm run lint`
+- Environment variables: Make sure they're set in Vercel
+
+#### App Deployed But Not Working
+
+**Test the proxy:**
+```bash
+curl https://your-app.vercel.app/health
+```
+
+**Check environment variables:**
+```bash
+vercel env ls
+```
+
+**View function logs:**
+- Go to Vercel Dashboard → Your Project → Deployments
+- Click on latest deployment → Functions tab
+
+#### CORS Errors Still Appearing
+
+1. Verify proxy is working: `curl https://your-app.vercel.app/health`
+2. Check browser console for the actual API URL being used
+3. Verify `GOOGLE_SHEET_DB_URL` is set correctly
+4. Redeploy: `vercel --prod`
+
+### Mobile Apps (iOS/Android)
+
+Mobile apps connect **directly** to Google Sheets (no proxy needed):
+- Build and deploy separately using EAS
+- No Vercel deployment required for mobile
+- See `eas.json` for build configurations
+
+### Deployment Checklist
+
+Before deploying:
+- [ ] Google Sheets Web App is set up and deployed
+- [ ] `.env` file has `GOOGLE_SHEET_DB_URL` for local testing
+- [ ] Tested locally: `npm run server` and `npm run web`
+- [ ] Committed all changes to Git
+- [ ] Pushed to GitHub/GitLab/Bitbucket
+
+After deploying:
+- [ ] Health endpoint works: `/health`
+- [ ] Can view logs in the web app
+- [ ] Can create a new log
+- [ ] Can edit a log
+- [ ] Can delete a log
+- [ ] Data persists in Google Sheets
+
+### Monitoring & Logs
+
+**View logs:**
+```bash
+vercel logs
+vercel logs --follow  # Real-time
+```
+
+**Check deployment status:**
+```bash
+vercel ls
+```
+
+**View specific deployment:**
+```bash
+vercel inspect <deployment-url>
+```
+
+### Performance Tips
+
+1. **Enable Caching:** Already configured in `vercel.json`
+2. **Monitor Usage:** Check Vercel Dashboard → Analytics
+3. **Optimize Images:** Use Expo's image optimization
+4. **Set up Monitoring:** Add services like Sentry (optional)
+
+### Cost
+
+**Vercel Free Tier includes:**
+- ✅ 100 GB bandwidth/month
+- ✅ Serverless function executions
+- ✅ Automatic HTTPS
+- ✅ Global CDN
+- ✅ Custom domains
+
+**Typical usage for personal project:** Well within free tier limits
+
+### Additional Resources
+
+For detailed guides:
+- **[PROXY_DEPLOYMENT.md](./PROXY_DEPLOYMENT.md)** - Complete proxy server deployment guide
+- **[QUICK_START.md](./QUICK_START.md)** - 5-minute local setup
+- **[ENV_SETUP.md](./ENV_SETUP.md)** - Environment variables configuration
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design
+
+### Support
+
+**Issues with deployment?**
+1. Check logs: `vercel logs`
+2. Review [PROXY_DEPLOYMENT.md](./PROXY_DEPLOYMENT.md#troubleshooting)
+3. Test locally first: `npm run server` + `npm run web`
+4. Verify environment variables are set
+
+---
+
+**🎉 Once deployed, your Research Notebook is accessible from anywhere at your Vercel URL!**
+
+---
 
 ### Linting
 
