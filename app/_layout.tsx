@@ -1,11 +1,14 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
 
+import { ThemedView } from '@/components/themed-view';
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useEffect } from 'react';
 
 // Import web-specific styles
 if (Platform.OS === 'web') {
@@ -16,14 +19,41 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
+function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'login';
+
+    if (!user && !inAuthGroup) {
+      // Redirect to login if not authenticated
+      router.replace('/login');
+    } else if (user && inAuthGroup) {
+      // Redirect to main app if authenticated
+      router.replace('/(tabs)');
+    }
+  }, [user, loading, segments]);
+
+  // Show loading screen while checking auth state
+  if (loading) {
+    return (
+      <ThemedView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <View style={styles.container}>
         <View style={styles.content}>
           <Stack>
+            <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           </Stack>
@@ -31,6 +61,14 @@ export default function RootLayout() {
         </View>
       </View>
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }
 
@@ -62,5 +100,10 @@ const styles = StyleSheet.create({
         maxWidth: '100%',
       },
     }),
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

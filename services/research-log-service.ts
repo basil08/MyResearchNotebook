@@ -1,3 +1,4 @@
+import { auth } from '@/config/firebase';
 import type { CreateResearchLogInput, ResearchLog, UpdateResearchLogInput } from '@/types/research-log';
 import axios from 'axios';
 import Constants from 'expo-constants';
@@ -88,10 +89,14 @@ class ResearchLogService {
         throw new Error('GOOGLE_SHEET_DB_URL is not configured. Please add it to your .env file.');
       }
 
+      // Get the current user's email
+      const currentUser = auth.currentUser;
+      const userEmail = currentUser?.email || 'unknown';
+
       const now = new Date().toISOString();
       const newLog: ResearchLog = {
         id: uuidv4(),
-        created_by: 'basil',
+        created_by: userEmail,
         date: input.date,
         plan_to_read: input.plan_to_read,
         plan_to_do: input.plan_to_do,

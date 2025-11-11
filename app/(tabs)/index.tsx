@@ -5,6 +5,7 @@ import { ResearchLogFilter } from '@/components/research-log-filter';
 import { ResearchLogList } from '@/components/research-log-list';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useAuth } from '@/contexts/auth-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { researchLogService } from '@/services/research-log-service';
 import type { CreateResearchLogInput, FilterOptions, ResearchLog } from '@/types/research-log';
@@ -23,6 +24,7 @@ type ViewMode = 'list' | 'create' | 'edit' | 'detail';
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { signOut, user } = useAuth();
 
   const [logs, setLogs] = useState<ResearchLog[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<ResearchLog[]>([]);
@@ -166,9 +168,29 @@ export default function HomeScreen() {
     setFilters(newFilters);
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      showSimpleAlert('Error', 'Failed to sign out. Please try again.');
+      console.error('Logout error:', error);
+    }
+  };
+
   const renderHeader = () => (
     <View style={[styles.header, { backgroundColor: isDark ? '#000' : '#fff' }]}>
-      <ThemedText style={styles.headerTitle}>Research Notebook</ThemedText>
+      <View style={styles.headerTop}>
+        <ThemedText style={styles.headerTitle}>Research Notebook</ThemedText>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <ThemedText style={styles.logoutButtonText}>Logout</ThemedText>
+        </TouchableOpacity>
+      </View>
+      {user && (
+        <ThemedText style={styles.userEmail}>{user.email}</ThemedText>
+      )}
       <View style={styles.headerButtons}>
         <TouchableOpacity
           style={[styles.headerButton, styles.filterButton]}
@@ -266,10 +288,31 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
+  },
+  userEmail: {
+    fontSize: 12,
+    opacity: 0.6,
     marginBottom: 12,
+  },
+  logoutButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#ff3b30',
+  },
+  logoutButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   headerButtons: {
     flexDirection: 'row',

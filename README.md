@@ -1,11 +1,17 @@
 # My Research Notebook 📚
 
 A beautiful, intuitive mobile application for tracking your daily research, learning, and personal development. Built with React Native and Expo, this app helps you maintain a structured log of your intellectual journey.
-]
+
+# TODO:
+
+1. Fix env variable errors for Expo Go android version
+2. Deploy to prod
+3. Rebuild app for android using EAS
 
 ## Features ✨
 
 ### Core Functionality
+- **🔐 Firebase Authentication**: Secure login/logout with Firebase (free forever for small teams)
 - **Daily Research Logs**: Document your daily activities with 8 comprehensive fields
 - **CRUD Operations**: Create, Read, Update, and Delete research logs
 - **Google Sheets Integration**: Your data is stored in Google Sheets for easy access and export
@@ -90,10 +96,21 @@ cd MyResearchNotebook
 npm install
 ```
 
-3. Create a `.env` file in the root directory:
-```
+3. Create a `.env` file in the root directory (copy from `.env.example`):
+```bash
+# Google Sheets
 GOOGLE_SHEET_DB_URL=your_google_sheet_api_url_here
+
+# Firebase Authentication
+FIREBASE_API_KEY=your_api_key_here
+FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
 ```
+
+See [FIREBASE_AUTH_SETUP.md](./FIREBASE_AUTH_SETUP.md) for detailed setup instructions.
 
 4. Start the development server:
 ```bash
@@ -106,12 +123,25 @@ npm start
    - **Web:** `npm run web`
    - **Mobile (Expo Go):** Scan the QR code with Expo Go app
 
+## Authentication Setup 🔐
+
+This app uses **Firebase Authentication** for secure login/logout. See [FIREBASE_AUTH_SETUP.md](./FIREBASE_AUTH_SETUP.md) for complete setup instructions.
+
+**Quick Setup:**
+1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Enable Email/Password authentication
+3. Add your Firebase config to `.env` file
+4. Manually add 2-3 users in Firebase Console
+5. Users can now log in with their email and password
+
+**Free Tier:** Firebase's free tier supports 50,000 monthly active users - perfect for personal or small team use!
+
 ## Google Sheets Setup 📊
 
 Your Google Sheet should have the following columns (headers in the first row):
 
 - `id` - Unique identifier (UUID)
-- `created_by` - Author name (hardcoded to "basil")
+- `created_by` - Author's email (automatically set from logged-in user)
 - `date` - Date of the log (YYYY-MM-DD format)
 - `plan_to_read` - Reading plans
 - `did_read` - What was read
@@ -505,11 +535,26 @@ npm run lint
 
 ## Environment Variables 🔐
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory (see `.env.example`):
 
-```
+```bash
+# Google Sheets Configuration
 GOOGLE_SHEET_DB_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+
+# Firebase Authentication Configuration
+FIREBASE_API_KEY=your_api_key_here
+FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+FIREBASE_APP_ID=your_app_id
 ```
+
+**Important:** Never commit your `.env` file to version control!
+
+For detailed setup instructions:
+- Firebase Auth: [FIREBASE_AUTH_SETUP.md](./FIREBASE_AUTH_SETUP.md)
+- Google Sheets: [GOOGLE_SHEETS_SETUP.md](./GOOGLE_SHEETS_SETUP.md)
 
 ## Contributing 🤝
 
