@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 module.exports = ({ config }) => {
     const expoConfig = config.expo || {};
     const extraConfig = expoConfig.extra || {};

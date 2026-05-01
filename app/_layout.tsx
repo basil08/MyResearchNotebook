@@ -29,15 +29,16 @@ function RootLayoutNav() {
     if (loading) return;
 
     const inAuthGroup = segments[0] === 'login';
+    const isProtectedRoute = segments[0] !== 'login' && segments[0] !== undefined;
 
-    if (!user && !inAuthGroup) {
-      // Redirect to login if not authenticated
+    if (!user && isProtectedRoute) {
+      // Redirect to login if not authenticated and trying to access protected route
       router.replace('/login');
     } else if (user && inAuthGroup) {
-      // Redirect to main app if authenticated
+      // Redirect to main app if authenticated and on login page
       router.replace('/(tabs)');
     }
-  }, [user, loading, segments]);
+  }, [user, loading, segments, router]);
 
   // Show loading screen while checking auth state
   if (loading) {

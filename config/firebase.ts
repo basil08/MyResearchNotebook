@@ -46,6 +46,21 @@ function getFirebaseConfig() {
 const firebaseConfig = getFirebaseConfig();
 
 // Debug: Log config to verify values are loaded (remove in production)
+console.log('=== FIREBASE CONFIG DEBUG ===');
+console.log('Platform:', Platform.OS);
+
+// Check if Constants.expoConfig is available
+console.log('Constants.expoConfig exists?', !!Constants.expoConfig);
+console.log('Constants.expoConfig?.extra exists?', !!Constants.expoConfig?.extra);
+
+if (Platform.OS !== 'web') {
+  console.log('Constants.expoConfig?.extra values:', {
+    FIREBASE_API_KEY: Constants.expoConfig?.extra?.FIREBASE_API_KEY ? '✅ Set' : '❌ Missing',
+    FIREBASE_AUTH_DOMAIN: Constants.expoConfig?.extra?.FIREBASE_AUTH_DOMAIN ? '✅ Set' : '❌ Missing',
+    FIREBASE_PROJECT_ID: Constants.expoConfig?.extra?.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing',
+  });
+}
+
 console.log('Firebase Config Loaded:', {
   platform: Platform.OS,
   apiKey: firebaseConfig.apiKey ? '✅ Set' : '❌ Missing',
@@ -55,6 +70,7 @@ console.log('Firebase Config Loaded:', {
   messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
   appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing',
 });
+console.log('=== END DEBUG ===');
 
 // Validate configuration
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {

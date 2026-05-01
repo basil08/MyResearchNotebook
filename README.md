@@ -7,6 +7,8 @@ A beautiful, intuitive mobile application for tracking your daily research, lear
 1. Fix env variable errors for Expo Go android version
 2. Deploy to prod
 3. Rebuild app for android using EAS
+4. Add auth
+5. Add Advance Search feature across all posts
 
 ## Features ✨
 

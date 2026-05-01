@@ -6,6 +6,23 @@ import { Platform } from 'react-native';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Get the current user's Firebase ID token for authentication
+ */
+async function getAuthToken(): Promise<string | null> {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    const token = await user.getIdToken();
+    return token;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
+}
+
 const GOOGLE_SHEET_URL = Constants.expoConfig?.extra?.GOOGLE_SHEET_DB_URL || 
                          process.env.GOOGLE_SHEET_DB_URL || 
                          '';
@@ -56,7 +73,21 @@ class ResearchLogService {
    */
   async getAll(): Promise<ResearchLog[]> {
     try {
-      const response = await axios.get(this.baseUrl);
+      // Check if user is authenticated
+      if (!auth.currentUser) {
+        throw new Error('User must be authenticated to fetch research logs');
+      }
+
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
+
+      const response = await axios.get(this.baseUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       
       // Assuming the Google Sheet returns JSON with the data
       // The structure depends on the Apps Script or Sheets API setup
@@ -89,9 +120,19 @@ class ResearchLogService {
         throw new Error('GOOGLE_SHEET_DB_URL is not configured. Please add it to your .env file.');
       }
 
-      // Get the current user's email
+      // Check if user is authenticated
       const currentUser = auth.currentUser;
-      const userEmail = currentUser?.email || 'unknown';
+      if (!currentUser) {
+        throw new Error('User must be authenticated to create research logs');
+      }
+
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
+
+      // Get the current user's email
+      const userEmail = currentUser.email || 'unknown';
 
       const now = new Date().toISOString();
       const newLog: ResearchLog = {
@@ -116,6 +157,7 @@ class ResearchLogService {
       const response = await axios.post(this.baseUrl, newLog, {
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
       
@@ -147,6 +189,16 @@ class ResearchLogService {
    */
   async update(input: UpdateResearchLogInput): Promise<ResearchLog> {
     try {
+      // Check if user is authenticated
+      if (!auth.currentUser) {
+        throw new Error('User must be authenticated to update research logs');
+      }
+
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
+
       const now = new Date().toISOString();
       const updateData = {
         ...input,
@@ -160,6 +212,7 @@ class ResearchLogService {
         {
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
         }
       );
@@ -183,6 +236,16 @@ class ResearchLogService {
    */
   async delete(id: string): Promise<void> {
     try {
+      // Check if user is authenticated
+      if (!auth.currentUser) {
+        throw new Error('User must be authenticated to delete research logs');
+      }
+
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
+
       // Google Apps Script doesn't support DELETE, so we use POST with action parameter
       const response = await axios.post(
         `${this.baseUrl}?id=${id}&action=delete`,
@@ -190,6 +253,7 @@ class ResearchLogService {
         {
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
         }
       );

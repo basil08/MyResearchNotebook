@@ -1,9 +1,30 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import admin from "firebase-admin";
 
 // Load environment variables
 dotenv.config();
+
+// Initialize Firebase Admin SDK
+// For production, use service account key file or environment variables
+// For now, we'll use the project ID to initialize
+let firebaseAdminInitialized = false;
+try {
+  if (process.env.FIREBASE_PROJECT_ID) {
+    // Initialize with project ID (works for token verification)
+    admin.initializeApp({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+    });
+    firebaseAdminInitialized = true;
+    console.log('✅ Firebase Admin initialized');
+  } else {
+    console.warn('⚠️  FIREBASE_PROJECT_ID not set - token verification disabled');
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Firebase Admin:', error.message);
+  console.warn('⚠️  Token verification will be skipped');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,6 +36,55 @@ app.use(express.json()); // Parse JSON request bodies
 // Google Sheets API endpoint from environment
 const GOOGLE_SHEET_URL = process.env.GOOGLE_SHEET_DB_URL;
 
+/**
+ * Middleware to verify Firebase auth token
+ */
+async function verifyAuthToken(req, res, next) {
+  // Skip auth for health check
+  if (req.path === '/health') {
+    return next();
+  }
+
+  // Get token from Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized - Missing or invalid authorization token'
+    });
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+
+  // If Firebase Admin is not initialized, skip verification but require token presence
+  if (!firebaseAdminInitialized) {
+    console.warn('[Proxy] Firebase Admin not initialized - skipping token verification');
+    // Still require token to be present (basic protection)
+    if (!token || token.length < 10) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized - Invalid token format'
+      });
+    }
+    return next();
+  }
+
+  // Verify token with Firebase Admin
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    // Attach user info to request for potential use
+    req.user = decodedToken;
+    console.log(`[Proxy] Authenticated user: ${decodedToken.email}`);
+    next();
+  } catch (error) {
+    console.error('[Proxy] Token verification failed:', error.message);
+    return res.status(401).json({
+      success: false,
+      error: 'Unauthorized - Invalid or expired token'
+    });
+  }
+}
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ 
@@ -25,7 +95,8 @@ app.get("/health", (req, res) => {
 });
 
 // Main proxy endpoint - handles all Google Sheets operations
-app.all("/api/proxy", async (req, res) => {
+// Protected with auth token verification
+app.all("/api/proxy", verifyAuthToken, async (req, res) => {
   try {
     // Check if Google Sheets URL is configured
     if (!GOOGLE_SHEET_URL) {
