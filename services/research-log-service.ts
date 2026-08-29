@@ -28,8 +28,12 @@ const GOOGLE_SHEET_URL = Constants.expoConfig?.extra?.GOOGLE_SHEET_DB_URL ||
                          '';
 
 // Headers should match the Google Sheet column structure
-// Expected columns: id, created_by, date, plan_to_read, plan_to_do, did_read, learned_today, 
+// Expected columns: id, created_by, date, plan_to_read, plan_to_do, did_read, learned_today,
 //                   new_thoughts, coded_today, wrote_or_taught, try_tomorrow, created_at, updated_at
+//
+// `date` is a text column carrying a local timestamp with its offset, and the
+// caller supplies it already formatted (see utils/entry.ts). Do not reformat or
+// re-parse it here - round-tripping it through a Date is what shifts the day.
 
 /**
  * Get the API URL based on platform

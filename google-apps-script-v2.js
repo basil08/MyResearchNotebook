@@ -21,6 +21,11 @@
  * First row should contain these headers (in any order):
  * id, created_by, date, plan_to_read, plan_to_do, did_read, learned_today, 
  * new_thoughts, coded_today, wrote_or_taught, try_tomorrow, created_at, updated_at
+ *
+ * The `date` column must be TEXT. It carries a local timestamp with its UTC
+ * offset ("2026-08-29T14:32:07+05:30"). If Sheets turns that cell into a real
+ * date, this script serialises it back as a UTC datetime and every entry
+ * displays a day early for anyone west of Greenwich.
  */
 
 const SHEET_NAME = 'ResearchLogs'; // Change this to your sheet name if different
@@ -136,6 +141,7 @@ function doPost(e) {
     
     Logger.log('Appending row: ' + JSON.stringify(row));
     sheet.appendRow(row);
+    forceDateColumnToText(sheet, headers, sheet.getLastRow());
     
     Logger.log('Log created successfully');
     return createJsonResponse({ 
@@ -214,6 +220,8 @@ function handleUpdate(e, sheet) {
       }
     });
     
+    forceDateColumnToText(sheet, headers, rowIndex + 1);
+    
     Logger.log('Updated ' + updatedCount + ' fields');
     
     return createJsonResponse({ 
@@ -291,6 +299,30 @@ function handleDelete(e, sheet) {
       error: 'Failed to delete log',
       message: error.toString() 
     }, 500);
+  }
+}
+
+/**
+ * Keep the `date` cell of one row as plain text.
+ *
+ * The client writes a local timestamp with its offset -
+ * "2026-08-29T14:32:07+05:30" - which Sheets does not currently recognise as a
+ * date, so it lands as text on its own. This pins that down: if the column has
+ * inherited a date format from older rows, or Sheets ever gets cleverer about
+ * parsing, a coerced cell would come back out as a UTC datetime and shift the
+ * entry by a day.
+ *
+ * Only the row just written is touched, so existing rows are left exactly as
+ * they are - there is deliberately no migration.
+ */
+function forceDateColumnToText(sheet, headers, rowNumber) {
+  try {
+    const dateColumn = headers.indexOf('date');
+    if (dateColumn === -1 || !rowNumber) return;
+    sheet.getRange(rowNumber, dateColumn + 1).setNumberFormat('@');
+  } catch (error) {
+    // Formatting is insurance, not the write itself - never fail the request.
+    Logger.log('Could not pin date cell to text: ' + error.toString());
   }
 }
 

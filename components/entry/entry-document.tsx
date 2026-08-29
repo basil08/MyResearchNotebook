@@ -12,7 +12,7 @@ import { ScrollView, TextInput, View } from 'react-native';
 import { Button, Row, Text } from '@/components/ui';
 import { logFields, type LogField } from '@/constants/design';
 import { useLayout, useTheme } from '@/hooks/use-theme';
-import { toDate } from '@/utils/entry';
+import { calendarDate, hasTime, nowStamp, toDate, withCalendarDate } from '@/utils/entry';
 import { format } from 'date-fns';
 import { EntryField } from './entry-field';
 
@@ -46,6 +46,7 @@ export function EntryDocument({
 
   const parsed = toDate(draft.date);
   const title = parsed ? format(parsed, 'EEEE, d MMMM yyyy') : draft.date || 'New entry';
+  const time = parsed && hasTime(draft.date) ? format(parsed, 'HH:mm') : null;
 
   /** Clicking a field in read mode opens write mode with that field focused. */
   const requestEdit = useCallback(
@@ -90,8 +91,8 @@ export function EntryDocument({
                 Date
               </Text>
               <TextInput
-                value={draft.date}
-                onChangeText={(date) => onChange({ date })}
+                value={calendarDate(draft.date)}
+                onChangeText={(day) => onChange({ date: withCalendarDate(draft.date, day) })}
                 placeholder={DATE_HINT}
                 placeholderTextColor={t.colors.inkFaint}
                 selectionColor={t.colors.accent}
@@ -111,6 +112,17 @@ export function EntryDocument({
                   },
                 ]}
               />
+              {/*
+                The time is recorded, not edited. It is the moment the entry was
+                started, which is a fact about the entry rather than a setting;
+                moving the day keeps it. Entries written before Milestone 4 have
+                no time at all and simply show nothing here.
+              */}
+              {time && (
+                <Text variant="mono" tone="faint">
+                  {time}
+                </Text>
+              )}
               {!parsed && (
                 <Text variant="uiSmall" tone="danger">
                   Use {DATE_HINT}
@@ -152,21 +164,19 @@ export function EntryDocument({
   );
 }
 
-/** Build a draft from a stored log, or an empty one dated today. */
+/**
+ * Build a draft from a stored log, or a new one stamped with the current
+ * local date and time.
+ *
+ * An existing `date` is carried through untouched. Normalising it here would
+ * silently rewrite every row the moment it was opened — which is a migration,
+ * and we are deliberately not running one. The editor renders the calendar day
+ * through `calendarDate()` instead, and only writes a new value when the user
+ * actually changes the day.
+ */
 export function toDraft(source?: Partial<EntryDraft> & { date?: string }): EntryDraft {
   const base = {} as EntryDraft;
   for (const field of logFields) base[field] = String(source?.[field] ?? '');
-  base.date = source?.date
-    ? normaliseDate(String(source.date))
-    : format(new Date(), 'yyyy-MM-dd');
+  base.date = source?.date ? String(source.date) : nowStamp();
   return base;
-}
-
-/**
- * Apps Script hands back a full UTC datetime for a date cell. The editor works
- * in plain calendar dates, so collapse it to one on the way in.
- */
-function normaliseDate(value: string): string {
-  const d = toDate(value);
-  return d ? format(d, 'yyyy-MM-dd') : value;
 }

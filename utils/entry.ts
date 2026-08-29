@@ -1,14 +1,38 @@
 /**
  * Entry helpers — date handling and the list-row summary.
  *
- * Date handling is deliberately defensive. Google Apps Script serialises a
- * Sheets date *cell* as a full JS Date, so `date` arrives as a UTC ISO string
- * ("2026-08-27T18:30:00.000Z") that is timezone-shifted off the day the user
- * actually meant. Older rows may instead be a plain "YYYY-MM-DD" string, and
- * a hand-edited cell can be anything at all. Every read goes through
- * `toDate()`; nothing calls `parseISO` directly on sheet data.
+ * ## The `date` field
  *
- * The proper fix (an explicit wall-clock field, migrated) is Milestone 4.
+ * `date` is a TEXT column and must stay one. Since Milestone 4 new entries
+ * store a full local timestamp with its UTC offset:
+ *
+ *     2026-08-29T14:32:07+05:30
+ *
+ * The offset is what makes it unambiguous: the wall clock the writer saw is
+ * recoverable no matter where the row is later read.
+ *
+ * ### Why that exact shape
+ *
+ * Google Sheets silently coerces anything it recognises as a date into a real
+ * date cell, and Apps Script then serialises that cell back as a UTC ISO
+ * string — which is how a "2026-08-27" entry comes back as
+ * "2026-08-26T18:30:00.000Z" and displays a day early. A space-separated
+ * "2026-08-29 14:32" is coerced exactly this way. The `T`-separated form with
+ * an offset is not, so it survives as text. `created_at` has always used the
+ * same shape, which is the standing proof it round-trips intact.
+ *
+ * ### What is in the column
+ *
+ * No migration was run (deliberately), so all four of these are live and every
+ * read has to cope with them:
+ *
+ *   1. `2026-08-29T14:32:07+05:30`  new entries — date and wall clock
+ *   2. `2026-08-29`                 older entries — date only
+ *   3. `2026-08-28T18:30:00.000Z`   older rows Sheets coerced into date cells
+ *   4. anything a human typed into the cell by hand
+ *
+ * Every read goes through `toDate()`. Nothing calls `parseISO` on sheet data
+ * directly.
  */
 
 import { fieldMeta, logFields, type LogField } from '@/constants/design';
@@ -18,11 +42,19 @@ import { format, isValid, parseISO } from 'date-fns';
 /** Bare calendar dates, which must NOT be shifted into local time. */
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 
+/** "2026-08-29 14:32" or with seconds — a hand-typed local time, no offset. */
+const LOCAL_DATETIME = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/;
+
+/** Carries an explicit time of day, whatever the notation. */
+const HAS_CLOCK = /\d{2}:\d{2}/;
+
 /**
  * Parse anything the sheet might hand back into a Date, or null.
  *
  * A bare "YYYY-MM-DD" is read as local midnight, never UTC — otherwise
- * everyone west of Greenwich sees every entry a day early.
+ * everyone west of Greenwich sees every entry a day early. A time with no
+ * offset is likewise read as local, because that is what whoever typed it
+ * meant.
  */
 export function toDate(value: string | undefined | null): Date | null {
   if (!value) return null;
@@ -35,11 +67,72 @@ export function toDate(value: string | undefined | null): Date | null {
     return isValid(local) ? local : null;
   }
 
+  const naive = LOCAL_DATETIME.exec(raw);
+  if (naive) {
+    const [, y, m, d, hh, mm, ss] = naive;
+    const local = new Date(+y, +m - 1, +d, +hh, +mm, ss ? +ss : 0);
+    return isValid(local) ? local : null;
+  }
+
   const parsed = parseISO(raw);
   if (isValid(parsed)) return parsed;
 
   const fallback = new Date(raw);
   return isValid(fallback) ? fallback : null;
+}
+
+/** The storage format for a new or re-timed entry. */
+const STAMP = "yyyy-MM-dd'T'HH:mm:ssXXX";
+
+/** Now, as a local timestamp with offset. What new entries record. */
+export function nowStamp(): string {
+  return format(new Date(), STAMP);
+}
+
+/**
+ * Does this stored value carry a time of day?
+ *
+ * A date-only row genuinely has no time — we do not know when it was written,
+ * and inventing one would be worse than showing none.
+ */
+export function hasTime(value: string | undefined | null): boolean {
+  if (!value) return false;
+  const raw = String(value).trim();
+  if (DATE_ONLY.test(raw)) return false;
+  return HAS_CLOCK.test(raw) && toDate(raw) !== null;
+}
+
+/** The calendar day of a stored value, as "YYYY-MM-DD". For editing. */
+export function calendarDate(value: string | undefined | null): string {
+  const d = toDate(value);
+  return d ? format(d, 'yyyy-MM-dd') : String(value ?? '').trim();
+}
+
+/**
+ * Move an entry to a different calendar day, keeping its time of day.
+ *
+ * A row that never had a time stays date-only. Attaching "now" to it would be
+ * a fabrication — that is not when it was written — and it would quietly
+ * migrate old rows, which we explicitly are not doing.
+ */
+export function withCalendarDate(existing: string, nextDay: string): string {
+  const day = nextDay.trim();
+  if (!DATE_ONLY.test(day)) return day; // mid-typing; store verbatim
+  if (!hasTime(existing)) return day;
+
+  const previous = toDate(existing);
+  if (!previous) return day;
+
+  const [y, m, d] = day.split('-').map(Number);
+  const moved = new Date(
+    y,
+    m - 1,
+    d,
+    previous.getHours(),
+    previous.getMinutes(),
+    previous.getSeconds()
+  );
+  return isValid(moved) ? format(moved, STAMP) : day;
 }
 
 /** "Thu 28 Aug" — the list row. */
@@ -74,19 +167,23 @@ export function formatMonthLabel(key: string): string {
 }
 
 /**
- * Wall-clock time for the entry, if we have a trustworthy one.
+ * Wall-clock time for the entry, or null when we genuinely do not know it.
  *
- * `created_at` is a real ISO datetime written by the client, so it is the
- * only usable source — `date` is not, per the note at the top of this file.
+ * New entries carry their own time in `date`, so that is authoritative.
  *
- * But `created_at` is only the entry's time if it was written on the day the
- * entry is *about*. A back-filled entry, or one written either side of local
- * midnight, would otherwise show a time belonging to a different day right
- * next to the date. In that case we show nothing rather than something wrong.
- *
- * Milestone 4 replaces this with an explicit wall-clock field.
+ * Pre-Milestone-4 rows are date-only. For those `created_at` is the only
+ * candidate, and it is only the entry's time if the entry was written on the
+ * day it is about — otherwise a back-filled entry, or one written either side
+ * of local midnight, shows a time belonging to a different day right next to
+ * the date. Where that check fails we show nothing rather than something
+ * wrong, and those rows stay that way: no backfill was run.
  */
 export function formatEntryTime(log: ResearchLog): string | null {
+  if (hasTime(log.date)) {
+    const own = toDate(log.date);
+    if (own) return format(own, 'HH:mm');
+  }
+
   const created = toDate(log.created_at);
   const on = toDate(log.date);
   if (!created || !on) return null;

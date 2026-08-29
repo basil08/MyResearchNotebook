@@ -267,6 +267,63 @@ mode opens write mode with that field already focused.
 
 ---
 
+## ADR-013 — `date` carries a local timestamp with offset, and stays text
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 4
+
+New entries store the day *and* the time they were started, in one text column:
+
+    2026-08-29T14:32:07+05:30
+
+No migration was run. Rows written before this stay date-only, forever.
+
+**Why this exact shape.** Google Sheets coerces anything it recognises as a
+date into a real date cell, and Apps Script then serialises that cell back as a
+UTC ISO string — which is precisely how a `2026-08-27` entry returns as
+`2026-08-26T18:30:00.000Z` and renders a day early west of Greenwich (the bug
+fixed in Milestone 1). A space-separated `2026-08-29 14:32` is coerced exactly
+this way. The `T`-separated form with an explicit offset is not, so it survives
+as text — and `created_at` has always used that shape, which is the standing
+proof it round-trips intact.
+
+The offset is not decoration: it makes the wall clock the writer saw
+recoverable wherever the row is later read.
+
+**Rejected:**
+- *A separate `time` column* — a second column to keep in sync with the first,
+  and every read would have to handle one being present without the other.
+- *Backfilling old rows from `created_at`* — `created_at` is when the row was
+  written, which for a back-filled entry is a different day entirely. It would
+  manufacture a fact rather than record one.
+
+**Four formats are now live in that column** and every read must cope: the new
+stamp, legacy date-only, older rows Sheets already coerced to UTC datetimes,
+and whatever a human has typed into a cell by hand. `toDate()` in
+`utils/entry.ts` is the single funnel; nothing calls `parseISO` on sheet data
+directly. 27 assertions covering all four shapes, plus sorting and range
+filtering, were run against the built bundle.
+
+**Consequences:**
+- The time is *recorded, not edited*. It is a fact about the entry, not a
+  setting. Changing the day keeps the clock (`withCalendarDate`).
+- A row that never had a time stays date-only when its day is edited. Attaching
+  "now" would both fabricate a time and quietly migrate the row.
+- `toDraft()` no longer normalises an existing `date`. Doing so rewrote every
+  row the moment it was opened — a migration by accident.
+- Where a legacy row has no time, the UI shows none rather than guessing.
+
+**Cost:** the column holds four shapes indefinitely, so `toDate()` can never be
+simplified away. That is the price of not migrating, and it is paid in one
+well-tested function.
+
+**Requires an Apps Script redeploy — but only for insurance.** The script now
+pins the `date` cell of each written row to plain-text format
+(`forceDateColumnToText`), so a column that has inherited a date format from
+older rows cannot coerce a new write. Everything works without redeploying,
+because the stamp is not coerced today; redeploy to be safe against Sheets
+getting cleverer about parsing.
+
+---
+
 ## Open items (not yet decided)
 
 - **Mobile bypasses the authenticated proxy.** `getApiUrl()` sends native
@@ -278,9 +335,5 @@ mode opens write mode with that field already focused.
   authenticated proxy.
 - **Search compute location** (Milestone 5): client-side TF-IDF over the full
   corpus vs. a precomputed index. Decide when the corpus size is known.
-- **Timestamp migration** (Milestone 4): existing `date` values are date-only
-  strings; adding wall-clock time needs a backfill rule for historical rows.
-  Milestone 1 works around this in `utils/entry.ts`: `date` is parsed
-  defensively (a bare `YYYY-MM-DD` is read as *local* midnight, never UTC, or
-  every entry shows a day early west of Greenwich), and a row's time is
-  suppressed entirely unless `created_at` falls on the day the entry is about.
+- ~~**Timestamp migration**~~ — settled in ADR-013: new entries carry a local
+  timestamp with offset, historical rows are deliberately left alone.
