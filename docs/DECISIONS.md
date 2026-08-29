@@ -384,14 +384,35 @@ at ten-year scale.
 
 ---
 
+## ADR-015 — Native's direct Apps Script access is an accepted risk
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 6
+
+`getApiUrl()` sends iOS and Android traffic straight to the Apps Script URL,
+which is deployed "Anyone" and verifies no token of its own. Only the web path
+is checked, at the Netlify function. This stays as it is.
+
+**Why.** The app has one user, who is also its author, and the native builds are
+not being rebuilt from this codebase. Closing the gap means either putting a
+verifier inside the Apps Script or routing native through the proxy — work with
+no benefit to the only person affected, who has weighed it.
+
+**What the risk actually is,** stated once so it is not misremembered: the
+exposure is not "other users might see the data" — it is that the Apps Script
+URL is a bearer credential. Anyone who obtains it can read and write the whole
+corpus without any token. Keep it out of screenshots, issues and pasted logs.
+
+**This does not extend to attachments.** Drive writes go through the
+authenticated proxy as originally specified (ADR-016). Web is the platform under
+development, and adding a second unauthenticated write path is not something
+this decision licenses.
+
+**To reverse:** add Firebase token verification inside the Apps Script
+(`doGet`/`doPost` can verify a JWT against Google's public keys), or point
+`getApiUrl()` at the deployed proxy on native too.
+
+---
+
 ## Open items (not yet decided)
 
-- **Mobile bypasses the authenticated proxy.** `getApiUrl()` sends native
-  traffic straight to the Apps Script URL, which is deployed "Anyone" and does
-  no token verification of its own. Web is verified at the Netlify function;
-  mobile is not verified anywhere. Anyone with the script URL can read and
-  write the whole corpus. Must be resolved before Milestone 6 (attachments),
-  where the user has explicitly required that writes only go through the
-  authenticated proxy.
 - ~~**Timestamp migration**~~ — settled in ADR-013: new entries carry a local
   timestamp with offset, historical rows are deliberately left alone.

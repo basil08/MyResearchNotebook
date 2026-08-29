@@ -208,18 +208,22 @@ docs/                     design language and decision record
   rules, and how to extend it. Read before touching UI.
 - **[docs/DECISIONS.md](docs/DECISIONS.md)** — the architecture decision record.
   Every non-obvious choice, what was rejected, and what it cost.
+- **[docs/DRIVE_SETUP.md](docs/DRIVE_SETUP.md)** — connecting Google Drive for
+  attachments. One-time, about fifteen minutes.
 - **[EAS_BUILD_GUIDE.md](EAS_BUILD_GUIDE.md)** — Android builds.
 
 ---
 
 ## Known issues
 
-**Native traffic bypasses the authenticated proxy.** `getApiUrl()` in
-`services/research-log-service.ts` sends iOS and Android requests straight to
-the Apps Script URL. That deployment is set to "Anyone" and performs no token
-verification of its own, so the token the client attaches is never checked on
-that path — anyone holding the URL can read and write the whole corpus. Web is
-verified at the Netlify function; native is verified nowhere.
+**Native traffic bypasses the authenticated proxy — accepted.** `getApiUrl()` in
+`services/research-log-service.ts` sends iOS and Android requests straight to the
+Apps Script URL, which is deployed "Anyone" and verifies no token of its own.
+Only the web path is checked, at the Netlify function.
 
-Tracked under *Open items* in [docs/DECISIONS.md](docs/DECISIONS.md) and must be
-closed before attachments ship.
+This is a deliberate decision for a single-user app whose native builds are not
+being rebuilt ([ADR-015](docs/DECISIONS.md)). The practical consequence: **the
+Apps Script URL is itself a bearer credential.** Anyone who obtains it can read
+and write the whole corpus without any token, so keep it out of screenshots,
+issues and pasted logs. ADR-015 records how to reverse this if native
+development resumes.
