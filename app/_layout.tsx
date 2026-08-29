@@ -1,65 +1,96 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
 
-import { ThemedView } from '@/components/themed-view';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { useEffect } from 'react';
+import { LogsProvider } from '@/contexts/logs-context';
+import { ThemeModeProvider } from '@/contexts/theme-context';
+import { palette } from '@/constants/design';
+import { useTheme } from '@/hooks/use-theme';
 
-// Import web-specific styles
 if (Platform.OS === 'web') {
   require('./_layout.web.css');
 }
 
-export const unstable_settings = {
-  anchor: '(tabs)',
+/**
+ * Navigation themes derived from our own tokens, so the container background
+ * behind a screen transition never flashes the wrong ground.
+ */
+const navLight = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: palette.light.ground,
+    card: palette.light.ground,
+    text: palette.light.ink,
+    border: palette.light.hairline,
+    primary: palette.light.accent,
+  },
+};
+
+const navDark = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: palette.dark.ground,
+    card: palette.dark.ground,
+    text: palette.dark.ink,
+    border: palette.dark.hairline,
+    primary: palette.dark.accent,
+  },
 };
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const t = useTheme();
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
-
-    const inAuthGroup = segments[0] === 'login';
-    const isProtectedRoute = segments[0] !== 'login' && segments[0] !== undefined;
-
-    if (!user && isProtectedRoute) {
-      // Redirect to login if not authenticated and trying to access protected route
-      router.replace('/login');
-    } else if (user && inAuthGroup) {
-      // Redirect to main app if authenticated and on login page
-      router.replace('/(tabs)');
-    }
+    const onLogin = segments[0] === 'login';
+    if (!user && !onLogin) router.replace('/login');
+    else if (user && onLogin) router.replace('/');
   }, [user, loading, segments, router]);
 
-  // Show loading screen while checking auth state
   if (loading) {
     return (
-      <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </ThemedView>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: t.colors.ground,
+        }}
+      >
+        <ActivityIndicator size="large" color={t.colors.accent} />
+      </View>
     );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <View style={styles.container}>
-        <View style={styles.content}>
-          <Stack>
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </View>
+    <ThemeProvider value={t.isDark ? navDark : navLight}>
+      {/*
+        ADR-004: no fixed-width centred column here. The shell fills the
+        viewport and each screen caps its own reading column.
+      */}
+      <View style={{ flex: 1, backgroundColor: t.colors.ground }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: t.colors.ground },
+          }}
+        >
+          <Stack.Screen name="login" />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="entry/new" />
+          <Stack.Screen name="entry/[id]" />
+        </Stack>
+        <StatusBar style={t.isDark ? 'light' : 'dark'} />
       </View>
     </ThemeProvider>
   );
@@ -67,44 +98,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <ThemeModeProvider>
+      <AuthProvider>
+        <LogsProvider>
+          <RootLayoutNav />
+        </LogsProvider>
+      </AuthProvider>
+    </ThemeModeProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    ...Platform.select({
-      web: {
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-      },
-      default: {
-        backgroundColor: 'transparent',
-      },
-    }),
-  },
-  content: {
-    flex: 1,
-    width: '100%',
-    ...Platform.select({
-      web: {
-        maxWidth: 800, // 50% of a typical 1600px screen, capped at 800px
-        minWidth: 375, // Minimum mobile width
-        alignSelf: 'center',
-        // @ts-ignore - web-only property
-        boxShadow: '0 0 20px rgba(0, 0, 0, 0.1)',
-      },
-      default: {
-        maxWidth: '100%',
-      },
-    }),
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
