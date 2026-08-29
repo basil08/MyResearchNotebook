@@ -6,6 +6,7 @@ import { ActivityIndicator, Platform, View } from 'react-native';
 import 'react-native-get-random-values';
 import 'react-native-reanimated';
 
+import { AttachmentsProvider } from '@/contexts/attachments-context';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { LogsProvider } from '@/contexts/logs-context';
 import { ThemeModeProvider } from '@/contexts/theme-context';
@@ -129,7 +130,9 @@ export default function RootLayout() {
     <ThemeModeProvider>
       <AuthProvider>
         <LogsProvider>
-          <RootLayoutNav />
+          <AttachmentsProvider>
+            <RootLayoutNav />
+          </AttachmentsProvider>
         </LogsProvider>
       </AuthProvider>
     </ThemeModeProvider>

@@ -51,6 +51,8 @@ installed build a *different app* that will not update in place. See
   grouped by month.
 - **An index of what you keep returning to** — the recurring themes, weighted,
   in the right-hand pane and on `/keywords`. Click one to filter the list.
+- **Attachments** — drag files onto an entry, or use Add files. They go to a
+  folder in your own Drive; images preview inline.
 - **Search across everything** — ⌘K. TF-IDF over the full text of every field,
   with stemming, so "compress" finds "compression". Quote a `"phrase"` to
   require it verbatim. Results show the field and the passage that matched.
@@ -193,7 +195,8 @@ app/                      routes (expo-router)
 components/
   ui/                     design-system primitives
   shell/                  app frame, bar, rail, theme toggle
-  entry/                  list, row, document, field, filters, save status
+  entry/                  list, row, document, field, filters, save status,
+                          attachments
   search/                 the command-palette search overlay
   index/                  keyword index rows
 constants/design.ts       every design token
@@ -201,7 +204,7 @@ contexts/                 auth, logs cache, theme mode
 hooks/                    useTheme / useLayout, useAutosave
 services/                 Apps Script client
 utils/                    entry helpers, dates, alerts, urls
-netlify/functions/        authenticated proxy + health check
+netlify/functions/        authenticated proxy, Drive attachments, health
 docs/                     design language and decision record
 ```
 

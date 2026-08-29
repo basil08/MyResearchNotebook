@@ -480,6 +480,68 @@ get too short to read comfortably.
 
 ---
 
+## ADR-018 — Attachments live in Drive, and Drive is the only record of them
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 6
+
+Files are uploaded to one Drive folder and tagged with the entry they belong to
+via Drive's `appProperties`. **Nothing about attachments is written to the
+sheet.**
+
+**Rejected:** an `attachments` column holding JSON.
+
+**Why:** it would need a manual schema change to a live sheet, and it would
+create a second copy of the truth. Delete a file in Drive and the sheet would
+still advertise it; the app would show an attachment that no longer exists.
+With `appProperties` the file *is* the record — remove it in Drive and it is
+simply gone from the entry, with nothing to reconcile.
+
+**Cost:** one extra call to list attachments on load, and grouping by entry in
+memory. Both are trivial at a few files per entry, and the call is lazy — a
+notebook with no attachments never contacts Drive.
+
+---
+
+## ADR-019 — The proxy authorises uploads; the bytes bypass it
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 6
+
+`/api/drive` verifies the caller's Firebase ID token, then asks Drive to open a
+**resumable upload session** and hands the browser that session URL. The browser
+PUTs the file to Google directly.
+
+**Why not stream the file through the function.** Netlify caps a function
+request body at 6MB, which after base64 leaves roughly 4.5MB of real file —
+useless for a paper.
+
+**Why this still satisfies "writes only through the authenticated proxy."** The
+session URL is not a credential. It is single-use, expires, and can write
+exactly one file into one folder that the *proxy* chose. The browser never holds
+an OAuth token, and no upload happens that the proxy did not authorise. Verified:
+a caller passing its own `parents` or `appProperties` cannot override either —
+both are fixed server-side.
+
+**Other things the tests pin down:**
+- Listing returns only files carrying the `friday` tag, so anything else in the
+  folder is invisible to the app.
+- Delete refuses any file outside the folder, any untagged file, and any unknown
+  id — and *trashes* rather than purges, so a mis-click is recoverable from the
+  Drive bin.
+- Inline previews are capped at 3.5MB, under Netlify's response limit; anything
+  larger opens in Drive.
+- The access token is cached in the warm container, so a burst of calls costs one
+  token exchange rather than one each.
+- An expired refresh token is reported as such, naming the likely cause (an
+  unpublished consent screen) rather than a bare `invalid_grant`.
+
+**Cost:** attachments are web-only. Native would need its own upload path, and
+per ADR-015 native is not being developed against this codebase.
+
+Verified with 28 assertions against the function with Google stubbed, plus an
+end-to-end pass over the real UI against a local stand-in — upload with
+progress, drag and drop, image previews through the authenticated media route,
+delete, and a failed upload surfacing its reason inline.
+
+---
+
 ## Open items (not yet decided)
 
 - ~~**Timestamp migration**~~ — settled in ADR-013: new entries carry a local

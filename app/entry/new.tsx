@@ -107,7 +107,13 @@ export default function NewEntryScreen() {
         </Row>
       }
     >
-      <EntryDocument draft={draft} mode={mode} onChange={onChange} onModeChange={setMode} />
+      <EntryDocument
+        entryId={createdId.current ?? undefined}
+        draft={draft}
+        mode={mode}
+        onChange={onChange}
+        onModeChange={setMode}
+      />
     </AppShell>
   );
 }

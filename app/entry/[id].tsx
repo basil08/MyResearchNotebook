@@ -169,6 +169,7 @@ export default function EntryScreen() {
       }
     >
       <EntryDocument
+        entryId={log.id}
         draft={draft}
         mode={mode}
         onChange={onChange}

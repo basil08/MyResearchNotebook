@@ -14,6 +14,7 @@ import { logFields, type LogField } from '@/constants/design';
 import { useLayout, useTheme } from '@/hooks/use-theme';
 import { calendarDate, hasTime, nowStamp, toDate, withCalendarDate } from '@/utils/entry';
 import { format } from 'date-fns';
+import { Attachments } from './attachments';
 import { EntryField } from './entry-field';
 
 export type EntryMode = 'read' | 'write';
@@ -24,6 +25,8 @@ export type EntryDraft = Record<LogField, string> & { date: string };
 const DATE_HINT = 'YYYY-MM-DD';
 
 interface EntryDocumentProps {
+  /** Absent until a new entry has been saved and has a real id. */
+  entryId?: string;
   draft: EntryDraft;
   mode: EntryMode;
   onChange: (patch: Partial<EntryDraft>) => void;
@@ -33,6 +36,7 @@ interface EntryDocumentProps {
 }
 
 export function EntryDocument({
+  entryId,
   draft,
   mode,
   onChange,
@@ -159,6 +163,12 @@ export function EntryDocument({
             />
           ))
         )}
+
+        {/*
+          Attachments hang off a saved entry, so a brand-new one has nowhere to
+          put them until its first save has given it an id.
+        */}
+        {entryId && <Attachments entryId={entryId} editable={mode === 'write'} />}
       </View>
     </ScrollView>
   );
