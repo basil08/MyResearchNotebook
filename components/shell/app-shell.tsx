@@ -13,8 +13,9 @@
  */
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Platform, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 
+import { SearchOverlay, useSearchHotkey } from '@/components/search/search-overlay';
 import { Button, Icon, Row, Text } from '@/components/ui';
 import { useAuth } from '@/contexts/auth-context';
 import { useLayout, useTheme } from '@/hooks/use-theme';
@@ -37,6 +38,7 @@ export function AppShell({ rail, aside, barLeading, barActions, children }: AppS
   const l = useLayout();
   const router = useRouter();
   const { signOut, user } = useAuth();
+  const [searchOpen, setSearchOpen] = useSearchHotkey();
 
   const showRail = !!rail && l.isWide;
   const showAside = !!aside && l.isUltraWide;
@@ -68,6 +70,49 @@ export function AppShell({ rail, aside, barLeading, barActions, children }: AppS
         )}
 
         <View style={{ flex: 1 }} />
+
+        {/*
+          Search lives in the shell so every screen has it, and so ⌘K works
+          from anywhere. There is nothing to search when signed out.
+        */}
+        {user &&
+          (l.isMedium ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Search entries"
+              onPress={() => setSearchOpen(true)}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: t.space.sm,
+                minWidth: 190,
+                height: 30,
+                paddingHorizontal: t.space.sm,
+                borderRadius: t.radius.md,
+                borderWidth: 1,
+                borderColor: t.colors.hairline,
+                ...(Platform.OS === 'web' ? ({ cursor: 'pointer' } as object) : null),
+              }}
+            >
+              <Icon name="search" size="sm" tone="faint" />
+              <Text variant="uiSmall" tone="faint" style={{ flex: 1 }}>
+                Search entries
+              </Text>
+              {Platform.OS === 'web' && (
+                <Text variant="uiSmall" tone="faint">
+                  ⌘K
+                </Text>
+              )}
+            </Pressable>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon="search"
+              onPress={() => setSearchOpen(true)}
+              accessibilityLabel="Search entries"
+            />
+          ))}
 
         {barActions}
         <ThemeToggle />
@@ -116,6 +161,8 @@ export function AppShell({ rail, aside, barLeading, barActions, children }: AppS
           </View>
         )}
       </View>
+
+      {user && <SearchOverlay visible={searchOpen} onClose={() => setSearchOpen(false)} />}
     </View>
   );
 }

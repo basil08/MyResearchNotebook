@@ -324,6 +324,66 @@ getting cleverer about parsing.
 
 ---
 
+## ADR-014 — Search is a client-side TF-IDF index, built in memory
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 5
+
+Full-text search over every field of every entry. The inverted index is built
+in the browser from the corpus already in `LogsProvider`, cached against that
+array in a `WeakMap` (`getIndex`), and rebuilt only when an entry is created,
+edited or deleted.
+
+**Why not a precomputed or server-side index.** The corpus is one entry per
+day: 70 today, ~3,700 after a decade. Measured on the built bundle at that
+ten-year size, the whole index builds in **63ms** and a query takes **2.9ms**.
+There is nothing to buy with a server round trip or a build step, and something
+real to lose — an index that can fall out of step with the sheet. This decision
+does not need revisiting until the corpus grows by two orders of magnitude,
+which one-entry-a-day cannot reach.
+
+**Ranking is `lnc.ltc` cosine TF-IDF:** sublinear term frequency
+`1 + log(tf)`, L2-normalised document and query vectors. Normalisation is what
+makes a short entry squarely about a topic outrank a long entry that mentions
+it in passing — verified in the tests.
+
+**A full Porter stemmer, not a suffix stripper.** A conservative stripper was
+tried first: it handled plurals and `-ing`, but left `compression` and
+`compress` as unrelated terms, which for this corpus is exactly the miss that
+matters. `utils/stem.ts` implements Porter steps 1a–5b and is verified against
+72 vectors from the canonical test vocabulary.
+
+**idf is BM25's smoothed form**, `log(1 + (N - df + 0.5) / (df + 0.5))`. The
+first implementation used `log(1 + N/df)`, which the tests caught as too weak:
+a term appearing in *every* entry still scored log(2) ≈ 0.69, so in a query
+mixing a common word with a rare one the common word dragged unrelated entries
+up the ranking. The BM25 form decays to near zero at df = N while staying
+strictly positive, so a query for a word that happens to appear everywhere
+still returns results in a sensible order rather than nothing at all.
+
+**Also decided:**
+- All eight fields weigh the same. Boosting one would be a guess about what
+  matters, and the entry that answers a query is not reliably in one field.
+- Terms are OR-ed, not AND-ed. For a notebook, recall beats strict conjunction.
+  Quoted `"phrases"` are the exception and act as a filter, since asking for one
+  is an explicit request for exactly that.
+- A trailing partial word is matched as a prefix, so results appear before the
+  word is finished — unless the query ends in whitespace, which signals the word
+  is complete.
+- Results show *why* they matched: the field name plus a snippet windowed on the
+  densest cluster of hits, with the hits marked. Fields are long paragraphs, so
+  the head of the field is usually not the reason it matched.
+- `tf-idf` tokenises to `tf` and `idf`, so searching either finds it.
+
+**Cost:** the index lives in memory for the session. At 3,700 entries that is a
+few megabytes, which is fine; a corpus far beyond this design point would want
+lazy building or a compact postings representation.
+
+Verified with 32 assertions against the built bundle, covering the Porter
+vocabulary, tokenising, query parsing, retrieval, ranking order, idf
+discrimination, phrase filtering, snippet construction, and build/query timing
+at ten-year scale.
+
+---
+
 ## Open items (not yet decided)
 
 - **Mobile bypasses the authenticated proxy.** `getApiUrl()` sends native
@@ -333,7 +393,5 @@ getting cleverer about parsing.
   write the whole corpus. Must be resolved before Milestone 6 (attachments),
   where the user has explicitly required that writes only go through the
   authenticated proxy.
-- **Search compute location** (Milestone 5): client-side TF-IDF over the full
-  corpus vs. a precomputed index. Decide when the corpus size is known.
 - ~~**Timestamp migration**~~ — settled in ADR-013: new entries carry a local
   timestamp with offset, historical rows are deliberately left alone.

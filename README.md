@@ -49,6 +49,9 @@ installed build a *different app* that will not update in place. See
   Pasted URLs condense to numbered links.
 - **A list you can scan.** Each entry shows one labelled line per filled field,
   grouped by month.
+- **Search across everything** — ⌘K. TF-IDF over the full text of every field,
+  with stemming, so "compress" finds "compression". Quote a `"phrase"` to
+  require it verbatim. Results show the field and the passage that matched.
 - **Light and dark**, following the system or pinned by the toggle in the bar.
 
 ---
