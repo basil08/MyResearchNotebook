@@ -115,6 +115,18 @@ export interface SearchIndex {
   postings: Map<string, Posting[]>;
   /** term → inverse document frequency. */
   idf: Map<string, number>;
+  /** term → how many entries contain it. */
+  df: Map<string, number>;
+  /** term → total occurrences across the whole corpus. */
+  tf: Map<string, number>;
+  /**
+   * stem → the surface form to show a human.
+   *
+   * Stems are for matching, not reading: `compress`, `activ`, `sensit`. The
+   * keyword index has to display something a person recognises, so the most
+   * frequent spelling actually written is kept alongside each stem.
+   */
+  display: Map<string, string>;
   /** Sorted vocabulary, for prefix expansion. */
   vocabulary: string[];
   size: number;
@@ -124,6 +136,9 @@ export const EMPTY_INDEX: SearchIndex = {
   logs: [],
   postings: new Map(),
   idf: new Map(),
+  df: new Map(),
+  tf: new Map(),
+  display: new Map(),
   vocabulary: [],
   size: 0,
 };
@@ -140,7 +155,10 @@ function fieldsOf(log: ResearchLog): [LogField, string][] {
 
 export function buildIndex(logs: ResearchLog[]): SearchIndex {
   const documentFrequency = new Map<string, number>();
+  const collectionFrequency = new Map<string, number>();
   const perDoc: Map<string, number>[] = [];
+  /** stem → surface spelling → how often that spelling was written. */
+  const surfaces = new Map<string, Map<string, number>>();
 
   // Pass 1 — term frequencies per document, and document frequency overall.
   for (const log of logs) {
@@ -150,12 +168,33 @@ export function buildIndex(logs: ResearchLog[]): SearchIndex {
         const term = normalise(token.raw);
         if (!term) continue;
         counts.set(term, (counts.get(term) ?? 0) + 1);
+
+        let spellings = surfaces.get(term);
+        if (!spellings) surfaces.set(term, (spellings = new Map()));
+        const surface = token.raw.replace(/['’]/g, '');
+        spellings.set(surface, (spellings.get(surface) ?? 0) + 1);
       }
     }
     perDoc.push(counts);
-    for (const term of counts.keys()) {
+    for (const [term, count] of counts) {
       documentFrequency.set(term, (documentFrequency.get(term) ?? 0) + 1);
+      collectionFrequency.set(term, (collectionFrequency.get(term) ?? 0) + count);
     }
+  }
+
+  // Collapse each stem to the spelling it was most often written as. Ties go
+  // to the shorter one, which is nearly always the base form.
+  const display = new Map<string, string>();
+  for (const [term, spellings] of surfaces) {
+    let best = term;
+    let bestCount = -1;
+    for (const [surface, count] of spellings) {
+      if (count > bestCount || (count === bestCount && surface.length < best.length)) {
+        best = surface;
+        bestCount = count;
+      }
+    }
+    display.set(term, best);
   }
 
   const total = logs.length;
@@ -200,6 +239,9 @@ export function buildIndex(logs: ResearchLog[]): SearchIndex {
     logs,
     postings,
     idf,
+    df: documentFrequency,
+    tf: collectionFrequency,
+    display,
     vocabulary: [...postings.keys()].sort(),
     size: total,
   };

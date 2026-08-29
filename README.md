@@ -49,6 +49,8 @@ installed build a *different app* that will not update in place. See
   Pasted URLs condense to numbered links.
 - **A list you can scan.** Each entry shows one labelled line per filled field,
   grouped by month.
+- **An index of what you keep returning to** — the recurring themes, weighted,
+  in the right-hand pane and on `/keywords`. Click one to filter the list.
 - **Search across everything** — ⌘K. TF-IDF over the full text of every field,
   with stemming, so "compress" finds "compression". Quote a `"phrase"` to
   require it verbatim. Results show the field and the passage that matched.
@@ -185,12 +187,15 @@ app/                      routes (expo-router)
   index.tsx               the corpus
   entry/new.tsx           new entry
   entry/[id].tsx          one entry, read and write
+  keywords.tsx            the full keyword index
   about.tsx               what Friday is
   login.tsx
 components/
   ui/                     design-system primitives
   shell/                  app frame, bar, rail, theme toggle
   entry/                  list, row, document, field, filters, save status
+  search/                 the command-palette search overlay
+  index/                  keyword index rows
 constants/design.ts       every design token
 contexts/                 auth, logs cache, theme mode
 hooks/                    useTheme / useLayout, useAutosave

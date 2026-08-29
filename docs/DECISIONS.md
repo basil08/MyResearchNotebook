@@ -412,6 +412,74 @@ this decision licenses.
 
 ---
 
+## ADR-016 — The keyword index ranks by concentration, not frequency
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 7
+
+The Index shows what the notebook keeps returning to, weighted. It reuses the
+Milestone 5 search index, which needed two additions: collection-wide term
+frequency, and a display spelling per stem.
+
+**Two rankings were tried and rejected before this one.**
+
+*Raw occurrence* — the obvious reading of "weighted by occurrence" — puts
+`paper`, `read`, `work`, `notes` at the top. That is vocabulary describing what
+kind of document this is, not what any of it is about, and a stopword list
+cannot help because these are not stopwords.
+
+*`df × idf`* looks principled and is quietly wrong. Because idf collapses as a
+term approaches every entry, the product peaks at roughly half the corpus, so
+it rewards a word for sitting at a particular frequency rather than for
+mattering. Tested against a corpus with a deliberately planted theme, the top of
+the list came back `interesting`, `took` — filler that happened to appear in
+about half the entries, ranked *above* the actual subject. This was caught by
+the tests, not by reading the code.
+
+**What ships is collection-level TF-IDF: total occurrences × idf.** The thing
+that separates a theme from filler is not how many entries contain it but how
+*concentrated* it is — a theme is used repeatedly inside the entries about it,
+filler is used once, everywhere. On the same test corpus the planted themes
+take the top two places, the filler falls to sixth and seventh, and a word in 53
+of 58 entries lands at #18 with a weight of 11 against the theme's 79.
+
+**Also decided:**
+- The number shown is plain document frequency ("in 14 entries") even though the
+  weight is not. That is the fact a reader can go and check; the weight only
+  orders the list and sets the bar length.
+- Terms in a single entry are excluded. One mention is a detail, not a theme.
+- A corpus under three entries shows nothing. With that little to compare,
+  every word looks equally important and saying so is worse than saying nothing.
+- Stems are for matching, not reading. The index now keeps the most frequent
+  spelling actually written for each stem, so the list says `compression`, not
+  `compress`. Ties go to the shorter spelling.
+- Selecting a keyword filters the entry list through the URL (`/?keyword=…`)
+  rather than component state, so a theme can be linked, reloaded, and reached
+  from the full index page.
+
+**Cost:** the index carries a `tf` map and a `display` map it did not need for
+search. Both are small — one entry per distinct term, not per posting.
+
+Verified with 21 assertions against the built bundle, including a synthetic
+corpus built specifically to trap a naive ranking.
+
+---
+
+## ADR-017 — The wide breakpoint drops from 1500 to 1380
+**Date:** 2026-08-29 · **Status:** accepted · **Milestone:** 7 ·
+**Amends:** ADR-003
+
+`breakpoints.xl` moves to 1380, which is where the right-hand pane appears.
+
+**Why.** Rail (232) + a full reading measure (720) + aside (292) plus gutters
+needs about 1340. At 1500 the pane could not appear on a 1440-wide laptop —
+which is most laptops — so the Index would have been invisible to its own
+author on the machine he uses. The three panes genuinely fit from 1380.
+
+**Cost:** between 1380 and 1500 the centre column is narrower than
+`measureWide` (980). It stays above the reading measure of 720, so lines never
+get too short to read comfortably.
+
+---
+
 ## Open items (not yet decided)
 
 - ~~**Timestamp migration**~~ — settled in ADR-013: new entries carry a local

@@ -116,13 +116,13 @@ animates longer than 280ms.
 | `barHeight` | 48 | top chrome |
 | `touchTarget` | 44 | minimum hit area |
 
-Breakpoints: `xs 0 · sm 640 · md 900 · lg 1180 · xl 1500`
+Breakpoints: `xs 0 · sm 640 · md 900 · lg 1180 · xl 1380`
 
 ```
 xs/sm  <900     one column, bottom nav, sheets
 md     900+     content + collapsible aside
 lg     1180+    rail | content
-xl     1500+    rail | content | aside
+xl     1380+    rail | content | aside
 ```
 
 ---

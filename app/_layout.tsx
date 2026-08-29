@@ -49,6 +49,7 @@ function titleFor(segments: string[]): string {
   const [root, child] = segments;
   if (root === 'login') return 'Sign in · Friday';
   if (root === 'about') return 'About · Friday';
+  if (root === 'keywords') return 'Index · Friday';
   if (root === 'entry') return child === 'new' ? 'New entry · Friday' : 'Entry · Friday';
   return 'Friday';
 }
@@ -115,6 +116,7 @@ function RootLayoutNav() {
           <Stack.Screen name="entry/new" />
           <Stack.Screen name="entry/[id]" />
           <Stack.Screen name="about" />
+          <Stack.Screen name="keywords" />
         </Stack>
         <StatusBar style={t.isDark ? 'light' : 'dark'} />
       </View>

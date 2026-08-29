@@ -303,8 +303,15 @@ export const breakpoints = {
   md: 900,
   /** laptop — three panes */
   lg: 1180,
-  /** wide desktop */
-  xl: 1500,
+  /**
+   * Wide desktop — the right-hand context pane appears.
+   *
+   * 1380, not 1500: rail (232) + a full reading measure (720) + aside (292)
+   * plus gutters needs about 1340, so this is the width at which all three
+   * genuinely fit. At 1500 the pane never appeared on a 1440-wide laptop,
+   * which is most laptops.
+   */
+  xl: 1380,
 } as const;
 
 export type Breakpoint = keyof typeof breakpoints;
