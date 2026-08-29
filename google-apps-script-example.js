@@ -1,5 +1,5 @@
 /**
- * Google Apps Script for Research Notebook Backend
+ * Google Apps Script for the Friday research notebook
  * 
  * Instructions:
  * 1. Open your Google Sheet

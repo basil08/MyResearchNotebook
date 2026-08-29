@@ -71,14 +71,17 @@ export function AppShell({ rail, aside, barLeading, barActions, children }: AppS
 
         {barActions}
         <ThemeToggle />
-        <Button
-          variant="ghost"
-          size="sm"
-          icon="logout"
-          label={l.isMedium ? 'Sign out' : undefined}
-          onPress={() => void signOut()}
-          accessibilityLabel={`Sign out${user?.email ? `, ${user.email}` : ''}`}
-        />
+        {/* `about` is reachable signed out, so this must not always be here. */}
+        {user && (
+          <Button
+            variant="ghost"
+            size="sm"
+            icon="logout"
+            label={l.isMedium ? 'Sign out' : undefined}
+            onPress={() => void signOut()}
+            accessibilityLabel={`Sign out, ${user.email ?? 'current account'}`}
+          />
+        )}
       </View>
 
       {/* Body */}

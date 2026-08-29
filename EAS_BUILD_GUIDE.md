@@ -1,6 +1,6 @@
 # Building Android APK with Firebase Authentication
 
-This guide explains how to build your Research Notebook app as an Android APK with Firebase Authentication properly configured.
+This guide explains how to build Friday as an Android APK with Firebase Authentication properly configured.
 
 ## Prerequisites
 

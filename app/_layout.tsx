@@ -44,16 +44,41 @@ const navDark = {
   },
 };
 
+/** Tab title per route. Kept beside the routes it describes. */
+function titleFor(segments: string[]): string {
+  const [root, child] = segments;
+  if (root === 'login') return 'Sign in · Friday';
+  if (root === 'about') return 'About · Friday';
+  if (root === 'entry') return child === 'new' ? 'New entry · Friday' : 'Entry · Friday';
+  return 'Friday';
+}
+
 function RootLayoutNav() {
   const t = useTheme();
   const { user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
+  /*
+   * Browser tab title.
+   *
+   * Set imperatively rather than through `Stack.Screen` options: expo-router
+   * renders an empty react-helmet <title> ahead of the one in `+html.tsx`, and
+   * with headers hidden the screen `title` option never populates it — so the
+   * tab ends up blank. One mechanism, verified in the browser.
+   */
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    document.title = titleFor(segments as string[]);
+  }, [segments]);
+
   useEffect(() => {
     if (loading) return;
+    // `about` is public: it explains what Friday is, which is exactly what
+    // someone who cannot get past the sign-in screen may need to read.
     const onLogin = segments[0] === 'login';
-    if (!user && !onLogin) router.replace('/login');
+    const isPublic = onLogin || segments[0] === 'about';
+    if (!user && !isPublic) router.replace('/login');
     else if (user && onLogin) router.replace('/');
   }, [user, loading, segments, router]);
 
@@ -89,6 +114,7 @@ function RootLayoutNav() {
           <Stack.Screen name="index" />
           <Stack.Screen name="entry/new" />
           <Stack.Screen name="entry/[id]" />
+          <Stack.Screen name="about" />
         </Stack>
         <StatusBar style={t.isDark ? 'light' : 'dark'} />
       </View>

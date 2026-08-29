@@ -1,5 +1,5 @@
 /**
- * Google Apps Script for Research Notebook Backend (v2)
+ * Google Apps Script for the Friday research notebook (v2)
  * WITH FIREBASE AUTHENTICATION SUPPORT
  * 
  * Instructions:
@@ -10,7 +10,7 @@
  * 5. Deploy as a web app:
  *    - Click "Deploy" > "New deployment"
  *    - Click the gear icon next to "Select type" and choose "Web app"
- *    - Description: "Research Notebook API v2"
+ *    - Description: "Friday API v2"
  *    - Execute as: "Me"
  *    - Who has access: "Anyone" (required for proxy to work)
  * 6. Click "Deploy"

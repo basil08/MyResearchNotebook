@@ -9,7 +9,7 @@ module.exports = ({ config }) => {
       ...config,
       expo: {
         ...expoConfig,
-        name: "Research Notebook",
+        name: "Friday",
         slug: "MyResearchNotebook",
         version: "1.0.0",
         orientation: "portrait",
@@ -25,7 +25,7 @@ module.exports = ({ config }) => {
           package: "com.basil.myresearchnotebook",
           versionCode: 1,
           adaptiveIcon: {
-            backgroundColor: "#E6F4FE",
+            backgroundColor: "#FAF9F7",
             foregroundImage: "./assets/images/android-icon-foreground.png",
             backgroundImage: "./assets/images/android-icon-background.png",
             monochromeImage: "./assets/images/android-icon-monochrome.png",
@@ -47,9 +47,9 @@ module.exports = ({ config }) => {
               image: "./assets/images/splash-icon.png",
               imageWidth: 200,
               resizeMode: "contain",
-              backgroundColor: "#ffffff",
+              backgroundColor: "#FAF9F7",
               dark: {
-                backgroundColor: "#000000",
+                backgroundColor: "#131211",
               },
             },
           ],

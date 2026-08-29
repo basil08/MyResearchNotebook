@@ -1,4 +1,4 @@
-# Netlify configuration for Research Notebook
+# Netlify configuration for Friday
 
 [build]
   command = "npm run build:web"

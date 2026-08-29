@@ -121,6 +121,25 @@ project must be re-linked. Not worth it for a cosmetic rename.
 **Cost:** internal identifiers permanently disagree with the product name. This
 is normal and harmless; the mismatch is documented here so nobody "fixes" it.
 
+**Applied in Milestone 3:** display name in `app.json` and `app.config.cjs`;
+splash and adaptive-icon backgrounds moved onto the palette (`#FAF9F7` light,
+`#131211` dark) from the stock white/blue; login, About and all UI copy; README
+rewritten; comment headers in `netlify.toml`, both Apps Script files and the EAS
+guide. `package.json` `name` was left as `myresearchnotebook` — it is an internal
+identifier and changing it buys nothing.
+
+The **icon and splash artwork are still the Expo template images.** They need a
+designer or a generated mark; nothing in this milestone could honestly produce
+them.
+
+Two things came out of building it. `/about` is **public** — it explains what
+Friday is, which is exactly what someone who cannot get past the sign-in screen
+may need to read — so `AppShell` now hides the sign-out control when there is no
+signed-in user. And the browser tab title is set imperatively from the root
+layout rather than through `Stack.Screen` options: expo-router renders an empty
+react-helmet `<title>` ahead of the one in `+html.tsx`, and with headers hidden
+the screen `title` option never populates it, leaving the tab blank.
+
 ---
 
 ## ADR-007 — Tokens are the only styling API

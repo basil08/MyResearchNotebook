@@ -7,8 +7,8 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { EntryFilters, useEntryFilter } from '@/components/entry/entry-filters';
 import { EntryList } from '@/components/entry/entry-list';
-import { AppShell } from '@/components/shell/app-shell';
-import { Button, Row, Text } from '@/components/ui';
+import { AppShell, PaneItem } from '@/components/shell/app-shell';
+import { Button, Divider, Row, Text } from '@/components/ui';
 import { useLogs } from '@/contexts/logs-context';
 import { useLayout, useTheme } from '@/hooks/use-theme';
 import type { ResearchLog } from '@/types/research-log';
@@ -52,6 +52,19 @@ export default function HomeScreen() {
       total={logs.length}
       matching={filtered.length}
     />
+  );
+
+  const rail = (
+    <View style={{ flex: 1 }}>
+      {filters}
+      <View style={{ flex: 1 }} />
+      <Divider spacing="sm" />
+      <PaneItem
+        label="About Friday"
+        icon="info-outline"
+        onPress={() => router.push('/about')}
+      />
+    </View>
   );
 
   const barActions = (
@@ -133,7 +146,7 @@ export default function HomeScreen() {
   );
 
   return (
-    <AppShell rail={filters} barActions={barActions}>
+    <AppShell rail={rail} barActions={barActions}>
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: t.space.md }}>
           <ActivityIndicator size="large" color={t.colors.accent} />
