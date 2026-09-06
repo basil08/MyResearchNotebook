@@ -21,6 +21,7 @@ import React, {
   useState,
 } from 'react';
 
+import { ATTACHMENTS_ENABLED } from '@/config/features';
 import { useAuth } from '@/contexts/auth-context';
 import { driveService, type Attachment } from '@/services/drive-service';
 
@@ -79,6 +80,9 @@ export function AttachmentsProvider({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
+    // Feature off: never contact Drive, and leave `error` null so nothing is
+    // shown on an entry.
+    if (!ATTACHMENTS_ENABLED) return;
     if (!user) {
       loadedFor.current = null;
       setFiles([]);

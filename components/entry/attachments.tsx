@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Platform, Pressable, View } from 'react-native';
 
 import { Button, Icon, Row, Text } from '@/components/ui';
+import { ATTACHMENTS_ENABLED } from '@/config/features';
 import { useAttachments, type UploadTask } from '@/contexts/attachments-context';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -289,6 +290,10 @@ export function Attachments({ entryId, editable }: AttachmentsProps) {
       },
     ]);
   };
+
+  // Held back while Drive authorisation is expired: the section is hidden
+  // outright rather than left showing an error under every entry.
+  if (!ATTACHMENTS_ENABLED) return null;
 
   const nothingToShow = files.length === 0 && tasks.length === 0;
   if (!editable && nothingToShow) return null;
